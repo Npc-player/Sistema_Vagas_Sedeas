@@ -77,3 +77,10 @@ export const unidadeSchema = z.object({
 });
 
 export type UnidadeInput = z.infer<typeof unidadeSchema>;
+
+// Schema específico para edição (inclui o ID)
+export const editarUnidadeSchema = unidadeSchema.extend({
+  id: z.string().uuid('ID inválido'),
+});
+
+export type EditarUnidadeInput = z.infer<typeof editarUnidadeSchema>;
