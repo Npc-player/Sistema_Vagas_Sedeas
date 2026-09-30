@@ -13,6 +13,7 @@ import {
   Users,
   ShieldCheck,
   ClipboardList,
+  UserCog,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
@@ -71,6 +72,13 @@ export default async function ModulosPage() {
       href: '/acolhimentos',
       icone: ClipboardList,
       visivel: can.cadastrarAcolhido(session.role),
+    },
+    {
+      titulo: 'Usuários do Sistema',
+      descricao: 'Gestão de credenciais, perfis de acesso e vínculos.',
+      href: '/usuarios',
+      icone: UserCog,
+      visivel: can.verAuditoria(session.role),
     },
     {
       titulo: 'Auditoria',
