@@ -1,4 +1,4 @@
-// src/app/(app)/judiciario/consulta-judicial.tsx
+﻿// src/app/(app)/judiciario/consulta-judicial.tsx
 'use client';
 
 import { useActionState, useState } from 'react';
@@ -401,7 +401,7 @@ export function ConsultaJudicial() {
                       sistema. Por força do Art. 11 da LGPD, esses dados são
                       classificados como sensíveis e não são exibidos neste
                       módulo. Requisição específica deve ser encaminhada à
-                      Secretaria Municipal de Assistência Social.
+                      Secretaria de Desenvolvimento e Assistência Social.
                     </p>
                   </div>
                 )}

@@ -1,4 +1,4 @@
-// src/lib/audit/pdf.ts
+﻿// src/lib/audit/pdf.ts
 // Geração de PDF da trilha de auditoria.
 // Roda apenas no servidor (Node runtime).
 
@@ -83,7 +83,7 @@ export async function gerarPDFAuditoria(dados: DadosPDF): Promise<Buffer> {
         .fillColor('#0F766E')
         .fontSize(16)
         .font('Helvetica-Bold')
-        .text('Secretaria Municipal de Assistência Social', { align: 'left' });
+        .text('Secretaria de Desenvolvimento e Assistência Social', { align: 'left' });
 
       doc
         .fillColor('#0F172A')

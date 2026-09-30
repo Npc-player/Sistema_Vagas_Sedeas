@@ -1,4 +1,4 @@
-// src/app/(app)/layout.tsx
+﻿// src/app/(app)/layout.tsx
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSession } from '@/lib/rbac';
@@ -40,7 +40,7 @@ export default async function AppLayout({
                   Controle de Vagas
                 </div>
                 <div className="text-[11px] text-slate-500 leading-tight">
-                  Assistência Social
+                  Desenvolvimento e Assistência Social
                 </div>
               </div>
             </Link>

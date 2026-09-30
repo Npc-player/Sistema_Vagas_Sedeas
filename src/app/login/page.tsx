@@ -1,4 +1,4 @@
-// src/app/login/page.tsx
+﻿// src/app/login/page.tsx
 'use client';
 
 import { useActionState } from 'react';
@@ -25,7 +25,7 @@ function LoginForm() {
             Sistema de Controle de Vagas
           </h1>
           <p className="text-sm text-gray-600 mt-1">
-            Secretaria Municipal de Assistência Social
+            Secretaria de Desenvolvimento e Assistência Social
           </p>
         </div>
 
