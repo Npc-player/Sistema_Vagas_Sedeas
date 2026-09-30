@@ -10,8 +10,8 @@ if (!connectionString) {
 }
 
 const queryClient = postgres(connectionString, {
-  prepare: false,   // OBRIGATÓRIO para Supavisor Transaction mode
-  max: 1,           // 1 conexão por instância serverless
+  prepare: false,        // OBRIGATÓRIO para Supavisor Transaction mode
+  max: 5,                // permite algumas queries paralelas por instância
   idle_timeout: 20,
   max_lifetime: 60 * 30,
 });
