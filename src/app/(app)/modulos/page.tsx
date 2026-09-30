@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   ClipboardList,
   ArrowRight,
+  type LucideIcon,
 } from 'lucide-react';
 
 const LABEL_ROLE: Record<string, string> = {
@@ -25,12 +26,21 @@ const LABEL_ROLE: Record<string, string> = {
   TI_SUPORTE: 'TI / Suporte',
 };
 
+interface Modulo {
+  titulo: string;
+  descricao: string;
+  href: string;
+  icone: LucideIcon;
+  visivel: boolean;
+  emBreve?: boolean;
+}
+
 export default async function ModulosPage() {
   const session = await getSession();
 
   if (!session) return null;
 
-  const modulos = [
+  const modulos: Modulo[] = [
     {
       titulo: 'Unidades de Acolhimento',
       descricao: 'Cadastro e gestão das unidades da rede socioassistencial.',
@@ -68,7 +78,6 @@ export default async function ModulosPage() {
       href: '/auditoria',
       icone: ShieldCheck,
       visivel: can.verAuditoria(session.role),
-      emBreve: true,
     },
   ].filter((m) => m.visivel);
 
