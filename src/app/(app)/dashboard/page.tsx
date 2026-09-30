@@ -58,7 +58,6 @@ export default async function DashboardPage() {
       href: '/acolhidos',
       icone: Users,
       visivel: can.cadastrarAcolhido(session.role),
-      emBreve: true,
     },
     {
       titulo: 'Auditoria',
