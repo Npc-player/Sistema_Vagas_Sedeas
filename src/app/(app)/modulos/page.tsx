@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   ClipboardList,
   UserCog,
+  Scale,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
@@ -72,6 +73,16 @@ export default async function ModulosPage() {
       href: '/acolhimentos',
       icone: ClipboardList,
       visivel: can.cadastrarAcolhido(session.role),
+    },
+    {
+      titulo: 'Consulta Judiciária',
+      descricao:
+        'Consulta a registros individuais vinculados a procedimentos legais.',
+      href: '/judiciario',
+      icone: Scale,
+      visivel:
+        session.role === 'JUDICIARIO_MP' ||
+        session.role === 'ADMIN_MUNICIPAL',
     },
     {
       titulo: 'Usuários do Sistema',
