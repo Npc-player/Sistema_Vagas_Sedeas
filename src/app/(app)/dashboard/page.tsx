@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ChevronRight,
   ArrowRight,
+  ClipboardList,
 } from 'lucide-react';
 
 const LABEL_ROLE: Record<string, string> = {
@@ -58,6 +59,14 @@ export default async function DashboardPage() {
       href: '/acolhidos',
       icone: Users,
       visivel: can.cadastrarAcolhido(session.role),
+    },
+    {
+      titulo: 'Acolhimentos',
+      descricao: 'Admissões e desligamentos — histórico institucional.',
+      href: '/acolhimentos',
+      icone: ClipboardList,
+      visivel:
+        can.cadastrarAcolhido(session.role),
     },
     {
       titulo: 'Auditoria',
