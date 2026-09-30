@@ -6,6 +6,7 @@ import { db } from '@/db/client';
 import { getSession, can } from '@/lib/rbac';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { BotaoDesacolher } from './botao-desacolher';
 import {
   Card,
   CardContent,
@@ -157,6 +158,15 @@ export default async function DetalheAcolhimentoPage({
               </div>
             </div>
           </div>
+
+          {acolhimento.ativo && can.cadastrarAcolhido(session.role) && (
+            <BotaoDesacolher
+              acolhimentoId={acolhimento.id}
+              acolhidoNome={acolhimento.acolhido_nome}
+              protocolo={acolhimento.protocolo}
+              dataAcolhimento={acolhimento.data_acolhimento}
+            />
+          )}
         </div>
       </div>
 

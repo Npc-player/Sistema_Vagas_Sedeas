@@ -8,6 +8,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   admitirSchema,
+  desacolherSchema,
   verificarCompatibilidade,
 } from '@/lib/validations/acolhimento';
 import { calcularIdade } from '@/lib/validations/acolhido';
@@ -274,4 +275,137 @@ export async function admitirAction(
   revalidatePath('/acolhimentos');
   revalidatePath('/vagas');
   redirect(`/acolhimentos/${acolhimentoId}`);
+}
+
+// =====================================================
+// DESACOLHER — encerra o acolhimento e libera a vaga
+// =====================================================
+export async function desacolherAction(
+  _prevState: AcolhimentoActionState,
+  formData: FormData
+): Promise<AcolhimentoActionState> {
+  let session: Session;
+  try {
+    session = await requirePermission(can.cadastrarAcolhido);
+  } catch (e) {
+    if (e instanceof Error && e.message === 'FORBIDDEN') {
+      return { error: 'Você não tem permissão para registrar desacolhimentos.' };
+    }
+    if (e instanceof Error && e.message === 'UNAUTHENTICATED') {
+      return { error: 'Sessão expirada. Faça login novamente.' };
+    }
+    throw e;
+  }
+
+  const raw = {
+    acolhimentoId: formData.get('acolhimentoId'),
+    dataDesacolhimento: formData.get('dataDesacolhimento'),
+    motivoDesacolhimento: formData.get('motivoDesacolhimento'),
+    motivoDesacolhimentoDetalhe:
+      formData.get('motivoDesacolhimentoDetalhe') ?? '',
+  };
+
+  const parsed = desacolherSchema.safeParse(raw);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [key, msgs] of Object.entries(
+      parsed.error.flatten().fieldErrors
+    )) {
+      if (msgs && msgs.length > 0) fieldErrors[key] = msgs;
+    }
+    return { fieldErrors };
+  }
+
+  const data = parsed.data;
+
+  try {
+    await db.transaction(async (tx) => {
+      // 1. Busca o acolhimento
+      const rows = await tx.execute(sql`
+        SELECT id, data_acolhimento, ativo
+        FROM acolhimentos
+        WHERE id = ${data.acolhimentoId}
+        LIMIT 1
+      `);
+
+      if (rows.length === 0) {
+        throw new Error('ACOLHIMENTO_NOT_FOUND');
+      }
+
+      const acolhimento = rows[0] as {
+        id: string;
+        data_acolhimento: string;
+        ativo: boolean;
+      };
+
+      if (!acolhimento.ativo) {
+        throw new Error('ACOLHIMENTO_JA_ENCERRADO');
+      }
+
+      // RN-05: coerência cronológica
+      const dataEntrada = new Date(
+        acolhimento.data_acolhimento + 'T00:00:00'
+      );
+      const dataSaida = new Date(data.dataDesacolhimento + 'T00:00:00');
+
+      if (dataSaida < dataEntrada) {
+        throw new Error('DATA_ANTERIOR_A_ENTRADA');
+      }
+
+      // 2. Atualiza o acolhimento
+      await tx.execute(sql`
+        UPDATE acolhimentos SET
+          ativo = false,
+          data_desacolhimento = ${data.dataDesacolhimento}::date,
+          motivo_desacolhimento = ${data.motivoDesacolhimento},
+          motivo_desacolhimento_detalhe = ${data.motivoDesacolhimentoDetalhe || null},
+          updated_at = NOW()
+        WHERE id = ${data.acolhimentoId}
+      `);
+
+      // 3. Libera a vaga vinculada (se ainda estiver vinculada a este acolhimento)
+      await tx.execute(sql`
+        UPDATE vagas SET
+          status = 'DISPONIVEL',
+          acolhimento_atual_id = NULL,
+          updated_at = NOW()
+        WHERE acolhimento_atual_id = ${data.acolhimentoId}
+      `);
+    });
+
+    // 4. Auditoria
+    const context = await buildContext(session);
+    await audit(context, {
+      action: 'UPDATE',
+      entity: 'acolhimentos',
+      entityId: data.acolhimentoId,
+      after: {
+        ativo: false,
+        dataDesacolhimento: data.dataDesacolhimento,
+        motivoDesacolhimento: data.motivoDesacolhimento,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      const msg = error.message;
+      if (msg === 'ACOLHIMENTO_NOT_FOUND') {
+        return { error: 'Acolhimento não encontrado.' };
+      }
+      if (msg === 'ACOLHIMENTO_JA_ENCERRADO') {
+        return { error: 'Este acolhimento já foi encerrado.' };
+      }
+      if (msg === 'DATA_ANTERIOR_A_ENTRADA') {
+        return {
+          error:
+            'A data do desacolhimento não pode ser anterior à data do acolhimento.',
+        };
+      }
+    }
+    console.error('[desacolherAction] erro:', error);
+    return { error: 'Erro ao registrar desacolhimento. Tente novamente.' };
+  }
+
+  revalidatePath('/acolhimentos');
+  revalidatePath('/vagas');
+  redirect(`/acolhimentos/${data.acolhimentoId}`);
 }

@@ -145,3 +145,52 @@ export const LABEL_TIPO_ACOLHIMENTO: Record<string, string> = {
   JOSE_CALHERANI: 'José Calherani',
   RESIDENCIA_INCLUSIVA: 'Residência Inclusiva (R.I.)',
 };
+
+// =====================================================
+// Desacolhimento
+// =====================================================
+
+export const motivosDesacolhimento = [
+  'REINTEGRACAO_FAMILIAR',
+  'TRANSFERENCIA',
+  'MAIORIDADE',
+  'OBITO',
+  'DECISAO_JUDICIAL',
+] as const;
+
+export const LABEL_MOTIVO_DESACOLHIMENTO: Record<string, string> = {
+  REINTEGRACAO_FAMILIAR: 'Reintegração familiar',
+  TRANSFERENCIA: 'Transferência para outra unidade',
+  MAIORIDADE: 'Maioridade (18 anos)',
+  OBITO: 'Óbito',
+  DECISAO_JUDICIAL: 'Decisão judicial',
+};
+
+export const desacolherSchema = z.object({
+  acolhimentoId: z.string().uuid('ID inválido'),
+
+  dataDesacolhimento: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida')
+    .refine(
+      (val) => {
+        const data = new Date(val + 'T00:00:00');
+        const hoje = new Date();
+        hoje.setHours(23, 59, 59, 999);
+        return data <= hoje;
+      },
+      { message: 'A data não pode ser no futuro' }
+    ),
+
+  motivoDesacolhimento: z.enum(motivosDesacolhimento, {
+    message: 'Selecione o motivo do desacolhimento',
+  }),
+
+  motivoDesacolhimentoDetalhe: z
+    .string()
+    .max(2000, 'Máximo de 2000 caracteres')
+    .optional()
+    .or(z.literal('')),
+});
+
+export type DesacolherInput = z.infer<typeof desacolherSchema>;
