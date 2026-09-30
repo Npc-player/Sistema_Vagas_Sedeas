@@ -45,6 +45,33 @@ export default async function DetalheAcolhidoPage({
 
   if (!acolhido) notFound();
 
+  // LGPD Art. 37: leitura de dado sensível também precisa ser auditada
+  if (incluirSensiveis && (acolhido.cpf || acolhido.rg || acolhido.alergias || acolhido.comorbidades)) {
+    const { audit } = await import('@/lib/audit/log');
+    await audit(
+      {
+        userId: session.userId,
+        userEmail: session.userEmail,
+        userRole: session.role,
+        ipAddress: null,
+        userAgent: null,
+      },
+      {
+        action: 'READ',
+        entity: 'acolhidos',
+        entityId: id,
+        metadata: {
+          camposSensiveis: [
+            acolhido.cpf && 'cpf',
+            acolhido.rg && 'rg',
+            acolhido.alergias && 'alergias',
+            acolhido.comorbidades && 'comorbidades',
+          ].filter(Boolean),
+        },
+      }
+    );
+  }
+
   const idade = calcularIdade(acolhido.dataNascimento);
 
   return (
