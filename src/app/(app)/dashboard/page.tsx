@@ -1,6 +1,6 @@
 // src/app/(app)/dashboard/page.tsx
 import Link from 'next/link';
-import { getSession, can } from '@/lib/rbac';
+import { getSession } from '@/lib/rbac';
 import {
   getTotaisGerais,
   getDistribuicaoPorTipo,
@@ -17,18 +17,13 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Building2,
   BedDouble,
-  Users,
-  ShieldCheck,
   ChevronRight,
-  ArrowRight,
   CheckCircle2,
   XCircle,
   Clock,
   TrendingUp,
   AlertTriangle,
-  ClipboardList,
   BarChart3,
 } from 'lucide-react';
 
@@ -62,48 +57,6 @@ export default async function DashboardPage() {
     getUnidadesEmAlerta(),
     getTempoMedioPermanencia(),
   ]);
-
-  const modulos = [
-    {
-      titulo: 'Unidades de Acolhimento',
-      descricao: 'Cadastro e gestão das unidades.',
-      href: '/unidades',
-      icone: Building2,
-      visivel: can.listarUnidades(session.role),
-    },
-    {
-      titulo: 'Controle de Vagas',
-      descricao: 'Ocupação e disponibilidade em tempo real.',
-      href: '/vagas',
-      icone: BedDouble,
-      visivel:
-        can.editarVagas(session.role) ||
-        session.role === 'CONSELHO_MUNICIPAL' ||
-        session.role === 'JUDICIARIO_MP',
-    },
-    {
-      titulo: 'Pessoas Acolhidas',
-      descricao: 'Cadastro das pessoas em atendimento.',
-      href: '/acolhidos',
-      icone: Users,
-      visivel: can.cadastrarAcolhido(session.role),
-    },
-    {
-      titulo: 'Acolhimentos',
-      descricao: 'Admissões, desligamentos e histórico.',
-      href: '/acolhimentos',
-      icone: ClipboardList,
-      visivel: can.cadastrarAcolhido(session.role),
-    },
-    {
-      titulo: 'Auditoria',
-      descricao: 'Trilha imutável de operações.',
-      href: '/auditoria',
-      icone: ShieldCheck,
-      visivel: can.verAuditoria(session.role),
-      emBreve: true,
-    },
-  ].filter((m) => m.visivel);
 
   // Determina a cor do gauge conforme zonas de alerta
   const corTaxa =
@@ -225,7 +178,7 @@ export default async function DashboardPage() {
         <Card className="border-slate-200">
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-teal-700" />
+              <BedDouble className="w-4 h-4 text-teal-700" />
               <p className="text-xs text-slate-500 uppercase tracking-wide">
                 Acolhimentos ativos
               </p>
@@ -383,7 +336,9 @@ export default async function DashboardPage() {
             <TrendingUp className="w-4 h-4 text-teal-700" />
             Fluxo de movimentação
           </CardTitle>
-          <CardDescription>Entradas e saídas nos últimos 12 meses</CardDescription>
+          <CardDescription>
+            Entradas e saídas nos últimos 12 meses
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-end gap-2 h-48">
@@ -433,86 +388,8 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Módulos */}
-      <div>
-        <div className="flex items-end justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
-              Módulos do sistema
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Acesse as áreas disponíveis para o seu perfil
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {modulos.map((m) => {
-            const Icone = m.icone;
-            const conteudo = (
-              <Card
-                className={
-                  m.emBreve
-                    ? 'h-full border-slate-200 border-dashed bg-slate-50/50'
-                    : 'h-full border-slate-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 group cursor-pointer'
-                }
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between mb-3">
-                    <div
-                      className={
-                        m.emBreve
-                          ? 'w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center'
-                          : 'w-10 h-10 rounded-lg bg-teal-50 group-hover:bg-teal-100 transition-colors flex items-center justify-center'
-                      }
-                    >
-                      <Icone
-                        className={
-                          m.emBreve
-                            ? 'w-5 h-5 text-slate-400'
-                            : 'w-5 h-5 text-teal-700'
-                        }
-                      />
-                    </div>
-                    {m.emBreve ? (
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                        Em breve
-                      </span>
-                    ) : (
-                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
-                    )}
-                  </div>
-                  <CardTitle
-                    className={
-                      m.emBreve
-                        ? 'text-base text-slate-500'
-                        : 'text-base text-slate-900'
-                    }
-                  >
-                    {m.titulo}
-                  </CardTitle>
-                  <CardDescription className="text-xs leading-relaxed pt-1">
-                    {m.descricao}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            );
-
-            return m.emBreve ? (
-              <div key={m.href} className="cursor-not-allowed">
-                {conteudo}
-              </div>
-            ) : (
-              <Link key={m.href} href={m.href}>
-                {conteudo}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Rodapé */}
-      <div className="mt-12 pt-6 border-t border-slate-200">
+      <div className="mt-8 pt-6 border-t border-slate-200">
         <p className="text-xs text-slate-400 flex items-center gap-1.5">
           <ChevronRight className="w-3 h-3" />
           Todas as operações são registradas em trilha de auditoria imutável
