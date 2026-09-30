@@ -143,7 +143,7 @@ export default async function UnidadesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Link href={`/unidades/${u.id}`}>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="outline" size="sm">
                           Detalhes
                         </Button>
                       </Link>

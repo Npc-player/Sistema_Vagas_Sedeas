@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { MapaLeitos, type VagaResumo, type StatusVaga } from '@/components/features/mapa-leitos';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { BotaoStatusUnidade } from './botao-status';
 import {
   Card,
   CardContent,
@@ -116,12 +117,19 @@ export default async function DetalheUnidadePage({
           </div>
 
           {can.editarUnidade(session.role) && (
-            <Link href={`/unidades/${id}/editar`}>
-              <Button variant="outline">
-                <Pencil className="w-4 h-4 mr-1.5" />
-                Editar
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <BotaoStatusUnidade
+                unidadeId={unidade.id}
+                unidadeNome={unidade.nome}
+                ativo={unidade.ativo}
+              />
+              <Link href={`/unidades/${id}/editar`}>
+                <Button variant="outline">
+                  <Pencil className="w-4 h-4 mr-1.5" />
+                  Editar
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>
