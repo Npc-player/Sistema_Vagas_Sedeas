@@ -10,6 +10,7 @@ import {
 import { FiltrosAuditoria as FiltrosUI } from './filtros';
 import { LinhaLog } from './linha-log';
 import { Button } from '@/components/ui/button';
+import { BotaoExportar } from './botao-exportar';
 import {
   Card,
   CardContent,
@@ -72,17 +73,20 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Cabeçalho */}
-      <div className="mb-6">
-        <p className="text-xs font-medium text-teal-700 uppercase tracking-wider mb-1">
-          Governança
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900 tracking-tight flex items-center gap-2">
-          <ShieldCheck className="w-7 h-7 text-teal-700" />
-          Trilha de Auditoria
-        </h1>
-        <p className="text-sm text-slate-500 mt-2">
-          Registro imutável de todas as operações do sistema · LGPD Art. 37
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-xs font-medium text-teal-700 uppercase tracking-wider mb-1">
+            Governança
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900 tracking-tight flex items-center gap-2">
+            <ShieldCheck className="w-7 h-7 text-teal-700" />
+            Trilha de Auditoria
+          </h1>
+          <p className="text-sm text-slate-500 mt-2">
+            Registro imutável de todas as operações do sistema · LGPD Art. 37
+          </p>
+        </div>
+        <BotaoExportar />
       </div>
 
       {/* Aviso LGPD */}
