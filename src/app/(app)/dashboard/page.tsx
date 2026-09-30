@@ -42,13 +42,15 @@ export default async function DashboardPage() {
       icone: Building2,
       visivel: can.listarUnidades(session.role),
     },
-    {
+        {
       titulo: 'Controle de Vagas',
       descricao: 'Monitoramento em tempo real da ocupação e disponibilidade.',
       href: '/vagas',
       icone: BedDouble,
-      visivel: can.editarVagas(session.role),
-      emBreve: true,
+      visivel:
+        can.editarVagas(session.role) ||
+        session.role === 'CONSELHO_MUNICIPAL' ||
+        session.role === 'JUDICIARIO_MP',
     },
     {
       titulo: 'Pessoas Acolhidas',
