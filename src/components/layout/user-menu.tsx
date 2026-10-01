@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, User } from 'lucide-react';
 import { logoutAction } from '@/app/login/actions';
+import Link from 'next/link';
 
 interface UserMenuProps {
   email: string;
@@ -61,12 +62,14 @@ export function UserMenu({ email, role }: UserMenuProps) {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem disabled className="cursor-not-allowed">
-          <User className="mr-2 h-4 w-4" />
-          <span>Meu perfil</span>
-          <span className="ml-auto text-[10px] uppercase tracking-wide text-slate-400">
-            Em breve
-          </span>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/perfil"
+            className="flex items-center cursor-pointer"
+          >
+            <User className="mr-2 h-4 w-4" />
+            <span>Meu perfil</span>
+          </Link>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
