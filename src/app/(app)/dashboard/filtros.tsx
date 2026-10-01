@@ -131,9 +131,13 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
               >
                 <SelectTrigger
                   id="filtro-tipo"
-                  className="h-9 w-full text-sm [&>span]:truncate"
+                  className="h-9 w-full text-sm"
                 >
-                  <SelectValue placeholder="Todos" />
+                  <span className="truncate">
+                    {tipo
+                      ? (LABEL_TIPO_CURTO[tipo] ?? tipo)
+                      : 'Todos'}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Todos os tipos</SelectItem>
