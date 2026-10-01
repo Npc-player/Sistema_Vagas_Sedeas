@@ -11,9 +11,10 @@ if (!connectionString) {
 
 const queryClient = postgres(connectionString, {
   prepare: false,        // OBRIGATÓRIO para Supavisor Transaction mode
-  max: 5,                // permite algumas queries paralelas por instância
-  idle_timeout: 20,
-  max_lifetime: 60 * 30,
+  max: 1,                // 1 conexão por instância — Supavisor faz o pooling real
+  idle_timeout: 60,      // mantém a conexão viva por 60s entre requisições
+  max_lifetime: 60 * 30, // recicla a conexão a cada 30 minutos
+  connect_timeout: 10,   // falha rápido se não conseguir conectar
 });
 
 export const db = drizzle(queryClient, { schema });

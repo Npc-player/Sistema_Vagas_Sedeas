@@ -1,6 +1,5 @@
 // src/app/(app)/dpo/page.tsx
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { getSession, can } from '@/lib/rbac';
 import {
   getDpoConfiguracao,
@@ -9,7 +8,6 @@ import {
 } from '@/lib/dpo/queries';
 import { FormularioConfigDpo } from './formulario-config';
 import { ListaRequisicoes } from './lista-requisicoes';
-import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,

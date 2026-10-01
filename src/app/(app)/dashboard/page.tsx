@@ -2,6 +2,8 @@
 import Link from 'next/link';
 import { getSession } from '@/lib/rbac';
 import { getAlertasMaioridadeSaica } from '@/lib/dashboard/maioridade';
+import { FiltrosDashboard } from './filtros';
+import { getUnidadesParaFiltro } from '@/lib/dashboard/queries';
 import {
   getTotaisGerais,
   getDistribuicaoPorTipo,
@@ -47,21 +49,29 @@ const LABEL_ROLE: Record<string, string> = {
   TI_SUPORTE: 'TI / Suporte',
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string; unidadeId?: string }>;
+}) {
   const session = await getSession();
 
   if (!session) return null;
 
-  // Carrega todos os indicadores em paralelo
-  const [totais, porTipo, fluxo, alertas, tempoMedio, alertasMaioridade] =
-    await Promise.all([
-      getTotaisGerais(),
-      getDistribuicaoPorTipo(),
-      getFluxo12Meses(),
-      getUnidadesEmAlerta(),
-      getTempoMedioPermanencia(),
-      getAlertasMaioridadeSaica(),
-    ]);
+  const params = await searchParams;
+  const filtros = {
+    tipo: params.tipo,
+    unidadeId: params.unidadeId,
+  };
+
+  // Carrega indicadores sequencialmente (pool de 1 conexão)
+  const totais = await getTotaisGerais(filtros);
+  const porTipo = await getDistribuicaoPorTipo(filtros);
+  const fluxo = await getFluxo12Meses(filtros);
+  const alertas = await getUnidadesEmAlerta(filtros);
+  const tempoMedio = await getTempoMedioPermanencia(filtros);
+  const alertasMaioridade = await getAlertasMaioridadeSaica();
+  const unidadesParaFiltro = await getUnidadesParaFiltro();
 
   // Determina a cor do gauge conforme zonas de alerta
   const corTaxa =
@@ -92,6 +102,12 @@ export default async function DashboardPage() {
           {LABEL_ROLE[session.role] ?? session.role}
         </p>
       </div>
+
+      {/* Filtros */}
+      <FiltrosDashboard
+        key={`${params.tipo ?? ''}-${params.unidadeId ?? ''}`}
+        unidades={unidadesParaFiltro}
+      />
 
       {/* Alerta de unidades críticas */}
       {alertas.length > 0 && (
