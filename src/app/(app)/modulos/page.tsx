@@ -15,6 +15,7 @@ import {
   ClipboardList,
   UserCog,
   Scale,
+  Lock,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
@@ -84,6 +85,15 @@ export default async function ModulosPage() {
         session.role === 'JUDICIARIO_MP' ||
         session.role === 'ADMIN_MUNICIPAL',
     },
+    {
+      titulo: 'DPO — LGPD',
+      descricao:
+        'Encarregado pelo Tratamento de Dados e canal de requisições LGPD.',
+      href: '/dpo',
+      icone: Lock,
+      visivel: can.verAuditoria(session.role),
+    },
+
     {
       titulo: 'Usuários do Sistema',
       descricao: 'Gestão de credenciais, perfis de acesso e vínculos.',
