@@ -16,6 +16,7 @@ import {
   UserCog,
   Scale,
   Lock,
+  Info,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
@@ -93,7 +94,6 @@ export default async function ModulosPage() {
       icone: Lock,
       visivel: can.verAuditoria(session.role),
     },
-
     {
       titulo: 'Usuários do Sistema',
       descricao: 'Gestão de credenciais, perfis de acesso e vínculos.',
@@ -107,6 +107,13 @@ export default async function ModulosPage() {
       href: '/auditoria',
       icone: ShieldCheck,
       visivel: can.verAuditoria(session.role),
+    },
+    {
+      titulo: 'Sobre o Sistema',
+      descricao: 'Versão, notas de atualização e créditos institucionais.',
+      href: '/sobre',
+      icone: Info,
+      visivel: true,
     },
   ].filter((m) => m.visivel);
 

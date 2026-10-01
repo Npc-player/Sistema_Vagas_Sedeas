@@ -10,9 +10,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Info } from 'lucide-react';
 import { logoutAction } from '@/app/login/actions';
 import Link from 'next/link';
+
 
 interface UserMenuProps {
   email: string;
@@ -73,7 +74,21 @@ export function UserMenu({ email, role }: UserMenuProps) {
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
+                <DropdownMenuSeparator />
 
+        <DropdownMenuItem asChild>
+          <Link
+            href="/sobre"
+            className="flex items-center cursor-pointer"
+          >
+            <Info className="mr-2 h-4 w-4" />
+            <span>Sobre o sistema</span>
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <form action={logoutAction}></form>
         <form action={logoutAction}>
           <button type="submit" className="w-full">
             <DropdownMenuItem className="cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50">
