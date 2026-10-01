@@ -1,6 +1,7 @@
 // src/app/(app)/dashboard/page.tsx
 import Link from 'next/link';
 import { getSession } from '@/lib/rbac';
+import { getAlertasMaioridadeSaica } from '@/lib/dashboard/maioridade';
 import {
   getTotaisGerais,
   getDistribuicaoPorTipo,
@@ -25,6 +26,8 @@ import {
   TrendingUp,
   AlertTriangle,
   BarChart3,
+  Users2,
+  ArrowRight,
 } from 'lucide-react';
 
 const LABEL_TIPO: Record<string, string> = {
@@ -50,13 +53,15 @@ export default async function DashboardPage() {
   if (!session) return null;
 
   // Carrega todos os indicadores em paralelo
-  const [totais, porTipo, fluxo, alertas, tempoMedio] = await Promise.all([
-    getTotaisGerais(),
-    getDistribuicaoPorTipo(),
-    getFluxo12Meses(),
-    getUnidadesEmAlerta(),
-    getTempoMedioPermanencia(),
-  ]);
+  const [totais, porTipo, fluxo, alertas, tempoMedio, alertasMaioridade] =
+    await Promise.all([
+      getTotaisGerais(),
+      getDistribuicaoPorTipo(),
+      getFluxo12Meses(),
+      getUnidadesEmAlerta(),
+      getTempoMedioPermanencia(),
+      getAlertasMaioridadeSaica(),
+    ]);
 
   // Determina a cor do gauge conforme zonas de alerta
   const corTaxa =
@@ -100,8 +105,8 @@ export default async function DashboardPage() {
                 : 'unidades com ocupação acima de 95%'}
             </p>
             <ul className="text-xs space-y-0.5 mt-1">
-              {alertas.slice(0, 3).map((u) => (
-                <li key={u.id}>
+              {alertas.slice(0, 3).map((u, idx) => (
+                <li key={u.id ?? `alerta-ocupacao-${idx}`}>
                   <Link
                     href={`/vagas/${u.id}`}
                     className="underline hover:text-rose-700"
@@ -114,6 +119,49 @@ export default async function DashboardPage() {
               {alertas.length > 3 && (
                 <li className="text-rose-700 italic">
                   + {alertas.length - 3} outras
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+
+            {/* Alerta RN-07 — maioridade em Saica */}
+      {alertasMaioridade.length > 0 && (
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+          <Users2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-900 flex-1">
+            <p className="font-medium mb-1">
+              {alertasMaioridade.length}{' '}
+              {alertasMaioridade.length === 1
+                ? 'adolescente em Saica próximo da maioridade'
+                : 'adolescentes em Saica próximos da maioridade'}
+            </p>
+            <p className="text-xs mb-2">
+              Complete 17 anos e 6 meses — planejar desacolhimento ou
+              encaminhamento para Residência Inclusiva (RN-07).
+            </p>
+            <ul className="text-xs space-y-1 mt-1">
+                            {alertasMaioridade.slice(0, 4).map((a, idx) => (
+                <li
+                  key={a.acolhimentoId ?? `alerta-maioridade-${idx}`}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowRight className="w-3 h-3 shrink-0" />
+                  <Link
+                    href={`/acolhimentos/${a.acolhimentoId}`}
+                    className="underline hover:text-amber-700"
+                  >
+                    {a.acolhidoNome}
+                  </Link>
+                  <span className="text-amber-700">
+                    · {a.idadeAnos} anos · {a.mesesAte18} meses até 18
+                  </span>
+                </li>
+              ))}
+              {alertasMaioridade.length > 4 && (
+                <li className="text-amber-700 italic">
+                  + {alertasMaioridade.length - 4} outros
                 </li>
               )}
             </ul>

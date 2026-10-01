@@ -221,6 +221,7 @@ export async function getUnidadesEmAlerta(): Promise<UnidadeAlerta[]> {
   }));
 }
 
+
 // =====================================================
 // Tempo médio de permanência (dias)
 // =====================================================
