@@ -1,5 +1,5 @@
-// src/components/features/mapa-leitos.tsx
-// Mapa visual dos leitos de uma unidade.
+// src/components/features/mapa-vagas.tsx
+// Mapa visual das vagas de uma unidade.
 // Cores conforme RN-08 e especificação do documento técnico:
 //   DISPONIVEL  → verde
 //   OCUPADA     → vermelho
@@ -57,11 +57,11 @@ const ESTILO: Record<
   },
 };
 
-interface MapaLeitosProps {
+interface MapaVagasProps {
   vagas: VagaResumo[];
 }
 
-export function MapaLeitos({ vagas }: MapaLeitosProps) {
+export function MapaVagas({ vagas }: MapaVagasProps) {
   if (vagas.length === 0) {
     return (
       <p className="text-sm text-slate-500 py-8 text-center">
@@ -70,7 +70,7 @@ export function MapaLeitos({ vagas }: MapaLeitosProps) {
     );
   }
 
-  // Ordena por número do leito
+  // Ordena por número da vaga
   const ordenadas = [...vagas].sort((a, b) => a.numeroLeito - b.numeroLeito);
 
   // Contagem para a legenda
@@ -104,12 +104,12 @@ export function MapaLeitos({ vagas }: MapaLeitosProps) {
         })}
       </div>
 
-      {/* Grid de leitos */}
+      {/* Grid de vagas */}
       <TooltipProvider delayDuration={100}>
         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
           {ordenadas.map((v) => {
             const s = ESTILO[v.status];
-            const tooltipLinhas = [`Leito ${v.numeroLeito} — ${s.label}`];
+            const tooltipLinhas = [`Vaga ${v.numeroLeito} — ${s.label}`];
             if (v.motivoBloqueio) {
               tooltipLinhas.push(`Motivo: ${v.motivoBloqueio}`);
             }

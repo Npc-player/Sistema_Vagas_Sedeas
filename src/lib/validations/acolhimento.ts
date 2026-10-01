@@ -39,7 +39,7 @@ export const admitirSchema = z.object({
 
   unidadeId: z.string().uuid('Selecione uma unidade'),
 
-  vagaId: z.string().uuid('Selecione um leito disponível'),
+  vagaId: z.string().uuid('Selecione uma vaga disponível'),
 
   dataAcolhimento: z
     .string()

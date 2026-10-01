@@ -254,17 +254,17 @@ export async function admitirAction(
         return { error: msg.substring('INCOMPATIVEL:'.length) };
       }
       if (msg === 'VAGA_NOT_FOUND') {
-        return { error: 'Leito não encontrado.' };
+        return { error: 'Vaga não encontrada.' };
       }
       if (msg === 'VAGA_UNIDADE_DIVERGENTE') {
         return {
-          error: 'O leito selecionado não pertence à unidade informada.',
+          error: 'A vaga selecionada não pertence à unidade informada.',
         };
       }
       if (msg === 'VAGA_INDISPONIVEL') {
         return {
           error:
-            'O leito selecionado não está mais disponível. Escolha outro.',
+            'A vaga selecionada não está mais disponível. Escolha outra.',
         };
       }
     }

@@ -363,7 +363,7 @@ export default async function VagasPage() {
                       <TableCell className="text-right">
                         <Link href={`/vagas/${u.id}`}>
                           <Button variant="outline" size="sm">
-                            Ver leitos
+                            Ver vagas
                             <ChevronRight className="w-3.5 h-3.5 ml-1" />
                           </Button>
                         </Link>
@@ -399,7 +399,7 @@ export default async function VagasPage() {
                       </Badge>
                     </div>
                     <span className="text-xs text-slate-400">
-                      {u.total} leitos
+                      {u.total} vagas
                     </span>
                   </li>
                 ))}

@@ -190,13 +190,13 @@ export function FormularioAdmissao({
         </CardContent>
       </Card>
 
-      {/* 2. Unidade + leito */}
+      {/* 2. Unidade + vaga */}
       {acolhidoId && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Building2 className="w-4 h-4 text-teal-700" />
-              2. Unidade e leito
+              2. Unidade e vaga
             </CardTitle>
             <CardDescription>
               Apenas unidades compatíveis com o perfil etário são exibidas.
@@ -252,20 +252,20 @@ export function FormularioAdmissao({
               </Alert>
             )}
 
-            {/* Seleção de leito */}
+            {/* Seleção de vaga */}
             {unidadeSelecionada && compatibilidade?.compativel && (
               <div>
-                <Label htmlFor="vaga-select">Leito *</Label>
+                <Label htmlFor="vaga-select">Vaga *</Label>
                 <Select value={vagaId} onValueChange={setVagaId}>
                   <SelectTrigger id="vaga-select">
-                    <SelectValue placeholder="Escolha o leito" />
+                    <SelectValue placeholder="Escolha a vaga" />
                   </SelectTrigger>
                   <SelectContent>
                     {unidadeSelecionada.vagas.map((v) => (
                       <SelectItem key={v.id} value={v.id}>
                         <span className="flex items-center gap-2">
                           <BedDouble className="w-3.5 h-3.5 text-emerald-600" />
-                          Leito {v.numeroLeito}
+                          Vaga {v.numeroLeito}
                         </span>
                       </SelectItem>
                     ))}
@@ -275,8 +275,8 @@ export function FormularioAdmissao({
                 <p className="text-xs text-slate-500 mt-1.5">
                   {unidadeSelecionada.vagas.length}{' '}
                   {unidadeSelecionada.vagas.length === 1
-                    ? 'leito disponível'
-                    : 'leitos disponíveis'}{' '}
+                    ? 'vaga disponível'
+                    : 'vagas disponíveis'}{' '}
                   em {unidadeSelecionada.nome} (
                   {LABEL_TIPO_ACOLHIMENTO[unidadeSelecionada.tipo]}).
                 </p>

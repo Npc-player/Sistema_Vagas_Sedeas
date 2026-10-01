@@ -3,7 +3,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, can } from '@/lib/rbac';
 import { createClient } from '@/lib/supabase/server';
-import { MapaLeitos, type VagaResumo, type StatusVaga } from '@/components/features/mapa-leitos';
+import { MapaVagas, type VagaResumo, type StatusVaga } from '@/components/features/mapa-vagas';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BotaoStatusUnidade } from './botao-status';
@@ -149,7 +149,7 @@ export default async function DetalheUnidadePage({
                 <p className="text-xl font-semibold text-slate-900">
                   {unidade.capacidade_total}{' '}
                   <span className="text-sm font-normal text-slate-500">
-                    leitos
+                    vagas
                   </span>
                 </p>
               </div>
@@ -267,17 +267,17 @@ export default async function DetalheUnidadePage({
           </Card>
         </div>
 
-        {/* Coluna direita: mapa de leitos */}
+        {/* Coluna direita: mapa de vagas */}
         <div className="lg:col-span-2">
           <Card className="border-slate-200">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <BedDouble className="w-4 h-4 text-teal-700" />
-                Mapa de leitos
+                Mapa de vagas
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <MapaLeitos vagas={vagas} />
+              <MapaVagas vagas={vagas} />
             </CardContent>
           </Card>
         </div>

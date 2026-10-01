@@ -248,18 +248,18 @@ export default async function DetalheAcolhimentoPage({
             {acolhimento.numero_leito && (
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wide">
-                  Leito
+                  Vaga
                 </p>
                 <p className="text-slate-900 mt-0.5 flex items-center gap-1.5">
                   <BedDouble className="w-3.5 h-3.5 text-teal-700" />
-                  Leito {acolhimento.numero_leito}
+                  Vaga {acolhimento.numero_leito}
                 </p>
               </div>
             )}
             <Link href={`/vagas/${acolhimento.unidade_id}`}>
               <Button variant="outline" size="sm" className="mt-2">
                 <BedDouble className="w-3.5 h-3.5 mr-1.5" />
-                Ver mapa de leitos
+                Ver mapa de vagas
               </Button>
             </Link>
           </CardContent>

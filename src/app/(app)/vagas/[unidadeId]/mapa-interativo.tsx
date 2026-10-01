@@ -148,7 +148,7 @@ export function MapaInterativo({ vagas, podeEditar }: MapaInterativoProps) {
               podeEditar &&
               (v.status === 'DISPONIVEL' || v.status === 'BLOQUEADA');
 
-            const tooltipLinhas = [`Leito ${v.numeroLeito} — ${s.label}`];
+            const tooltipLinhas = [`Vaga ${v.numeroLeito} — ${s.label}`];
             if (v.motivoBloqueio) {
               tooltipLinhas.push(v.motivoBloqueio);
             }
@@ -228,10 +228,10 @@ export function MapaInterativo({ vagas, podeEditar }: MapaInterativoProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Unlock className="w-5 h-5 text-teal-700" />
-              Desbloquear leito {vagaSelecionada?.numeroLeito}
+              Desbloquear vaga {vagaSelecionada?.numeroLeito}
             </DialogTitle>
             <DialogDescription>
-              O leito voltará ao status <strong>Disponível</strong> e poderá
+              A vaga voltará ao status <strong>Disponível</strong> e poderá
               receber novos acolhimentos.
             </DialogDescription>
           </DialogHeader>

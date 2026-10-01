@@ -137,7 +137,7 @@ export default async function AcolhimentosPage() {
                 <TableRow>
                   <TableHead>Protocolo</TableHead>
                   <TableHead>Pessoa</TableHead>
-                  <TableHead>Unidade / Leito</TableHead>
+                  <TableHead>Unidade / Vaga</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Regime</TableHead>
                   <TableHead className="text-right">Ações</TableHead>

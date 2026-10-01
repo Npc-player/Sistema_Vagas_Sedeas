@@ -183,7 +183,7 @@ export default async function DashboardPage() {
               {totais.capacidadeTotal}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              leitos na rede municipal
+              vagas na rede municipal
             </p>
           </CardContent>
         </Card>
@@ -200,7 +200,7 @@ export default async function DashboardPage() {
               {totais.disponiveis}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              leitos disponíveis agora
+              vagas disponíveis agora
             </p>
           </CardContent>
         </Card>
@@ -250,7 +250,7 @@ export default async function DashboardPage() {
               Taxa de ocupação da rede
             </CardTitle>
             <CardDescription>
-              Percentual de leitos ocupados sobre a capacidade instalada
+              Percentual de vagas ocupadas sobre a capacidade instalada
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -334,7 +334,7 @@ export default async function DashboardPage() {
                         {LABEL_TIPO[t.tipo] ?? t.tipo}
                       </Badge>
                       <span className="text-xs text-slate-500">
-                        {t.total} leitos
+                        {t.total} vagas
                       </span>
                     </div>
                     <span className="text-xs text-slate-600 font-medium">

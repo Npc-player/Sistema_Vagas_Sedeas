@@ -97,9 +97,9 @@ export function DialogoBloqueio({
     <Dialog open={aberto} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Bloquear leito {numeroLeito}</DialogTitle>
+          <DialogTitle>Bloquear vaga {numeroLeito}</DialogTitle>
           <DialogDescription>
-            O leito fica indisponível para novos acolhimentos até ser
+            A vaga fica indisponível para novos acolhimentos até ser
             desbloqueado. A capacidade física total não é alterada.
           </DialogDescription>
         </DialogHeader>
