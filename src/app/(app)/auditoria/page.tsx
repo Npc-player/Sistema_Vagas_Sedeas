@@ -53,10 +53,9 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
     porPagina: 50,
   };
 
-  const [resultado, opcoes] = await Promise.all([
-    listarAuditoria(filtros),
-    getOpcoesFiltro(),
-  ]);
+  // Sequencial (pool de 1 conexão evita concorrência com Supavisor)
+  const resultado = await listarAuditoria(filtros);
+  const opcoes = await getOpcoesFiltro();
 
   // Função para construir URL da paginação preservando filtros
   function urlPagina(pagina: number): string {
