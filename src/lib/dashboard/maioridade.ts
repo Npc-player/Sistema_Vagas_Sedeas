@@ -52,6 +52,9 @@ export async function getAlertasMaioridadeSaica(): Promise<AlertaMaioridade[]> {
       AND a.data_nascimento <= (CURRENT_DATE - INTERVAL '17 years 6 months')
     ORDER BY a.data_nascimento ASC
   `);
+  const linhas = allRows<AlertaMaioridade>(result);
+  console.log('[DEBUG maioridade] linhas:', JSON.stringify(linhas));
+  return linhas;
 
   return allRows<AlertaMaioridade>(result);
 }

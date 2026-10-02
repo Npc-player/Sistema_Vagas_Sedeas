@@ -30,11 +30,10 @@ export default async function DpoPage() {
   if (!session) redirect('/login');
   if (!can.verAuditoria(session.role)) redirect('/dashboard');
 
-  const [config, requisicoes, contadores] = await Promise.all([
-    getDpoConfiguracao(),
-    listarRequisicoes({ porPagina: 30 }),
-    getContadoresRequisicoes(),
-  ]);
+  // Sequencial (pool de 1 conexão evita ECONNRESET com Supavisor)
+  const config = await getDpoConfiguracao();
+  const requisicoes = await listarRequisicoes({ porPagina: 30 });
+  const contadores = await getContadoresRequisicoes();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

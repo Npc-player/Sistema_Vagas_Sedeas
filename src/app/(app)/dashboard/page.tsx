@@ -406,12 +406,12 @@ export default async function DashboardPage({
         </CardHeader>
         <CardContent>
           <div className="flex items-end gap-2 h-48">
-            {fluxo.map((f) => {
+            {fluxo.map((f, idx) => {
               const altEntrada = (f.entradas / maxFluxo) * 100;
               const altSaida = (f.saidas / maxFluxo) * 100;
               return (
                 <div
-                  key={f.mes}
+                  key={f.mes ?? `fluxo-${idx}`}
                   className="flex-1 flex flex-col items-center gap-1"
                 >
                   <div className="flex items-end gap-0.5 w-full h-40">
