@@ -174,9 +174,6 @@ export default async function SobrePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <p className="text-sm font-medium text-slate-900">
-              Rafael Garcia Morcillo Junior
-            </p>
             <p className="text-sm font-medium text-slate-900 mt-2">
               Nelson Carvalho
             </p>
