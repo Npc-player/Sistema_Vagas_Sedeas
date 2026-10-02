@@ -133,13 +133,11 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
                   id="filtro-tipo"
                   className="h-9 w-full text-sm"
                 >
-                  <span className="truncate">
-                    {tipo
-                      ? (LABEL_TIPO_CURTO[tipo] ?? tipo)
-                      : 'Todos'}
-                  </span>
+                  <SelectValue placeholder="Todos">
+                    {tipo ? (LABEL_TIPO_CURTO[tipo] ?? tipo) : 'Todos'}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   <SelectItem value="__all__">Todos os tipos</SelectItem>
                   {TIPOS.map((t, idx) => (
                     <SelectItem key={`tipo-${t}-${idx}`} value={t}>
@@ -167,7 +165,7 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
                 >
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   <SelectItem value="__all__">Todas as unidades</SelectItem>
                   {unidadesFiltradas.map((u, idx) => (
                     <SelectItem

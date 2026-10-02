@@ -257,9 +257,6 @@ export async function getUnidadesEmAlerta(
     ocupadas: number;
   }>(result);
 
-   // ⬇️ ADICIONAR ESTA LINHA TEMPORARIAMENTE
-  console.log('[DEBUG unidadesAlerta] rows:', JSON.stringify(rows));
-
   return rows.map((r) => ({
     id: r.id,
     nome: r.nome,
