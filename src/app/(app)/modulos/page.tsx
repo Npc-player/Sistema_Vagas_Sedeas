@@ -17,6 +17,7 @@ import {
   Scale,
   Lock,
   Info,
+  FileBarChart2,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
@@ -101,6 +102,16 @@ export default async function ModulosPage() {
       icone: UserCog,
       visivel: can.verAuditoria(session.role),
     },
+
+        {
+      titulo: 'Relatórios',
+      descricao:
+        'Central de Regulação e Fluxo Mensal Detalhado de acolhimentos.',
+      href: '/relatorios',
+      icone: FileBarChart2,
+      visivel: can.cadastrarAcolhido(session.role),
+    },
+
     {
       titulo: 'Auditoria',
       descricao: 'Trilha imutável de todas as operações do sistema.',
