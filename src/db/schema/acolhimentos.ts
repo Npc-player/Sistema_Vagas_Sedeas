@@ -9,16 +9,27 @@ export const acolhimentos = pgTable('acolhimentos', {
   motivoAcolhimento: text('motivo_acolhimento').notNull(),
   motivoDetalhe: text('motivo_detalhe'),
   regime: regimeAcolhimentoEnum('regime').notNull(),
+
+  // Dados processuais e territoriais
+  numeroProcesso: text('numero_processo'),
+  numeroMedidaProtetiva: text('numero_medida_protetiva'),
+  numeroGuiaAcolhimento: text('numero_guia_acolhimento'),
+  territorio: text('territorio'),
+
   dataDesacolhimento: date('data_desacolhimento'),
   motivoDesacolhimento: motivoDesacolhimentoEnum('motivo_desacolhimento'),
   motivoDesacolhimentoDetalhe: text('motivo_desacolhimento_detalhe'),
+
   ativo: boolean('ativo').notNull().default(true),
   criadoPorUserId: uuid('criado_por_user_id').notNull(),
   protocolo: text('protocolo').notNull().unique(),
+
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   acolhidoIdx: index('acolhimentos_acolhido_idx').on(t.acolhidoId),
   unidadeIdx: index('acolhimentos_unidade_idx').on(t.unidadeId),
   ativoIdx: index('acolhimentos_ativo_idx').on(t.ativo),
+  numeroProcessoIdx: index('acolhimentos_numero_processo_idx').on(t.numeroProcesso),
+  numeroGuiaIdx: index('acolhimentos_numero_guia_idx').on(t.numeroGuiaAcolhimento),
 }));

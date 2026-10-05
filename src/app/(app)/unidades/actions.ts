@@ -71,6 +71,9 @@ export async function criarUnidadeAction(
     responsavelNome: formData.get('responsavelNome'),
     responsavelTelefone: formData.get('responsavelTelefone'),
     responsavelEmail: formData.get('responsavelEmail'),
+    asVaraInfancia: formData.get('asVaraInfancia') ?? '',
+    psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
+    asCreas: formData.get('asCreas') ?? '',
   };
 
   const parsed = unidadeSchema.safeParse(raw);
@@ -108,6 +111,9 @@ export async function criarUnidadeAction(
           responsavelNome: data.responsavelNome,
           responsavelTelefone: data.responsavelTelefone,
           responsavelEmail: data.responsavelEmail,
+          asVaraInfancia: data.asVaraInfancia || null,
+          psicVaraInfancia: data.psicVaraInfancia || null,
+          asCreas: data.asCreas || null,
           ativo: true,
         })
         .returning();
@@ -183,6 +189,9 @@ export async function editarUnidadeAction(
     responsavelNome: formData.get('responsavelNome'),
     responsavelTelefone: formData.get('responsavelTelefone'),
     responsavelEmail: formData.get('responsavelEmail'),
+    asVaraInfancia: formData.get('asVaraInfancia') ?? '',
+    psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
+    asCreas: formData.get('asCreas') ?? '',
   };
 
   const parsed = editarUnidadeSchema.safeParse(raw);
@@ -229,6 +238,9 @@ export async function editarUnidadeAction(
           responsavelNome: data.responsavelNome,
           responsavelTelefone: data.responsavelTelefone,
           responsavelEmail: data.responsavelEmail,
+          asVaraInfancia: data.asVaraInfancia || null,
+          psicVaraInfancia: data.psicVaraInfancia || null,
+          asCreas: data.asCreas || null,
           updatedAt: new Date(),
         })
         .where(eq(unidades.id, data.id));

@@ -71,6 +71,9 @@ export default async function EditarUnidadePage({
           responsavelNome: unidade.responsavel_nome,
           responsavelTelefone: unidade.responsavel_telefone,
           responsavelEmail: unidade.responsavel_email,
+          asVaraInfancia: unidade.as_vara_infancia ?? '',
+          psicVaraInfancia: unidade.psic_vara_infancia ?? '',
+          asCreas: unidade.as_creas ?? '',
         }}
       />
     </div>

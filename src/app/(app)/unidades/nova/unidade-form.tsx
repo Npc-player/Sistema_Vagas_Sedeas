@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useForm, useWatch } from 'react-hook-form';
+import Link from 'next/link';
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -316,10 +318,66 @@ export function UnidadeForm() {
         </CardContent>
       </Card>
 
+      {/* ============ Equipe técnica de referência ============ */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Equipe técnica de referência</CardTitle>
+          <CardDescription>
+            Profissionais que atendem esta unidade. Serão exibidos nos
+            relatórios mensais de fluxo de acolhimento.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div>
+            <Label htmlFor="asVaraInfancia">Assistente Social - Vara da Infância</Label>
+            <Input
+              id="asVaraInfancia"
+              placeholder="Ex.: Patrícia"
+              {...register('asVaraInfancia')}
+            />
+            {errors.asVaraInfancia && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.asVaraInfancia.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="psicVaraInfancia">Psicólogo(a) Vara da Infância</Label>
+            <Input
+              id="psicVaraInfancia"
+              placeholder="Ex.: Tainá"
+              {...register('psicVaraInfancia')}
+            />
+            {errors.psicVaraInfancia && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.psicVaraInfancia.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="asCreas">Assistente Social - CREAS</Label>
+            <Input
+              id="asCreas"
+              placeholder="Ex.: Denise"
+              {...register('asCreas')}
+            />
+            {errors.asCreas && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.asCreas.message}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" disabled={isPending}>
-          Cancelar
-        </Button>
+        <Link href="/unidades">
+          <Button type="button" variant="outline" disabled={isPending}>
+            Cancelar
+          </Button>
+        </Link>
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Salvando...' : 'Cadastrar unidade'}
         </Button>

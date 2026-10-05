@@ -15,6 +15,7 @@ export const tipoAcolhimentoEnum = pgEnum('tipo_acolhimento', [
   'CENTRO_DIA_IDOSO',
   'JOSE_CALHERANI',
   'RESIDENCIA_INCLUSIVA',
+  'CASA_PASSAGEM',
 ]);
 
 export const statusVagaEnum = pgEnum('status_vaga', [
@@ -35,4 +36,5 @@ export const motivoDesacolhimentoEnum = pgEnum('motivo_desacolhimento', [
   'MAIORIDADE',
   'OBITO',
   'DECISAO_JUDICIAL',
+  'EVASAO',
 ]);

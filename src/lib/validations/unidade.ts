@@ -74,6 +74,23 @@ export const unidadeSchema = z.object({
     .regex(telefoneRegex, 'Telefone inválido (use (00) 00000-0000)'),
 
   responsavelEmail: z.string().email('E-mail inválido').max(200),
+
+  // Equipe técnica de referência (opcional)
+  asVaraInfancia: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+  psicVaraInfancia: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+  asCreas: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type UnidadeInput = z.infer<typeof unidadeSchema>;
