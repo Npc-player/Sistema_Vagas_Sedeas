@@ -1,3 +1,4 @@
+// src/db/schema/acolhimentos.ts
 import { pgTable, uuid, text, date, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { regimeAcolhimentoEnum, motivoDesacolhimentoEnum } from './enums';
 
@@ -15,6 +16,11 @@ export const acolhimentos = pgTable('acolhimentos', {
   numeroMedidaProtetiva: text('numero_medida_protetiva'),
   numeroGuiaAcolhimento: text('numero_guia_acolhimento'),
   territorio: text('territorio'),
+
+  // Equipe técnica (override da unidade, se preenchida)
+  asVaraInfancia: text('as_vara_infancia'),
+  psicVaraInfancia: text('psic_vara_infancia'),
+  asCreas: text('as_creas'),
 
   dataDesacolhimento: date('data_desacolhimento'),
   motivoDesacolhimento: motivoDesacolhimentoEnum('motivo_desacolhimento'),

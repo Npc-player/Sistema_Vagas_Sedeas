@@ -32,9 +32,9 @@ import {
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import {
   AlertCircle,
@@ -43,6 +43,8 @@ import {
   User,
   Calendar,
   Building2,
+  FileText,
+  Users,
 } from 'lucide-react';
 
 const initialState: AcolhimentoActionState = {};
@@ -71,6 +73,19 @@ export function FormularioAdmissao({
   );
   const [motivoDetalhe, setMotivoDetalhe] = useState<string>('');
 
+  // Dados processuais
+  const [numeroProcesso, setNumeroProcesso] = useState<string>('');
+  const [numeroMedidaProtetiva, setNumeroMedidaProtetiva] =
+    useState<string>('');
+  const [numeroGuiaAcolhimento, setNumeroGuiaAcolhimento] =
+    useState<string>('');
+  const [territorio, setTerritorio] = useState<string>('');
+
+  // Equipe técnica do acolhimento
+  const [asVaraInfancia, setAsVaraInfancia] = useState<string>('');
+  const [psicVaraInfancia, setPsicVaraInfancia] = useState<string>('');
+  const [asCreas, setAsCreas] = useState<string>('');
+
   const acolhidoSelecionado = useMemo(
     () => acolhidos.find((a) => a.id === acolhidoId),
     [acolhidos, acolhidoId]
@@ -81,7 +96,6 @@ export function FormularioAdmissao({
     [unidades, unidadeId]
   );
 
-  // Validação em tempo real da compatibilidade (feedback ao usuário)
   const compatibilidade = useMemo(() => {
     if (!acolhidoSelecionado || !unidadeSelecionada) return null;
     const idade = calcularIdade(acolhidoSelecionado.dataNascimento);
@@ -96,7 +110,17 @@ export function FormularioAdmissao({
     setVagaId('');
   }
 
-  // Monta o valor de cada campo (o form é nativo, então usamos hidden inputs)
+  // Ao selecionar unidade, pré-preenche a equipe técnica com os valores padrão
+  function handleSelecionarUnidade(id: string) {
+    setUnidadeId(id);
+    setVagaId('');
+    const u = unidades.find((x) => x.id === id);
+    if (u) {
+      setAsVaraInfancia(u.asVaraInfancia ?? '');
+      setPsicVaraInfancia(u.psicVaraInfancia ?? '');
+      setAsCreas(u.asCreas ?? '');
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-6">
@@ -207,10 +231,7 @@ export function FormularioAdmissao({
               <Label htmlFor="unidade-select">Unidade *</Label>
               <Select
                 value={unidadeId}
-                onValueChange={(v) => {
-                  setUnidadeId(v);
-                  setVagaId('');
-                }}
+                onValueChange={handleSelecionarUnidade}
               >
                 <SelectTrigger id="unidade-select">
                   <SelectValue placeholder="Escolha uma unidade" />
@@ -244,7 +265,6 @@ export function FormularioAdmissao({
               <input type="hidden" name="unidadeId" value={unidadeId} />
             </div>
 
-            {/* Aviso de incompatibilidade */}
             {unidadeSelecionada && compatibilidade && !compatibilidade.compativel && (
               <Alert variant="destructive">
                 <AlertCircle className="w-4 h-4" />
@@ -252,7 +272,6 @@ export function FormularioAdmissao({
               </Alert>
             )}
 
-            {/* Seleção de vaga */}
             {unidadeSelecionada && compatibilidade?.compativel && (
               <div>
                 <Label htmlFor="vaga-select">Vaga *</Label>
@@ -283,7 +302,6 @@ export function FormularioAdmissao({
               </div>
             )}
 
-            {/* Confirmação de compatibilidade */}
             {compatibilidade?.compativel && unidadeSelecionada && (
               <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-3">
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
@@ -367,6 +385,125 @@ export function FormularioAdmissao({
                 placeholder="Contexto, circunstâncias, encaminhamentos anteriores..."
                 value={motivoDetalhe}
                 onChange={(e) => setMotivoDetalhe(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 4. Dados processuais */}
+      {vagaId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="w-4 h-4 text-teal-700" />
+              4. Dados processuais e territoriais
+            </CardTitle>
+            <CardDescription>
+              Campos opcionais. Serão exibidos nos relatórios mensais de
+              acolhimento.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="numeroProcesso">Número do processo</Label>
+              <Input
+                id="numeroProcesso"
+                name="numeroProcesso"
+                placeholder="Ex.: 0001234-56.2026.8.26.0100"
+                value={numeroProcesso}
+                onChange={(e) => setNumeroProcesso(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="numeroMedidaProtetiva">
+                Número da medida protetiva
+              </Label>
+              <Input
+                id="numeroMedidaProtetiva"
+                name="numeroMedidaProtetiva"
+                placeholder="Ex.: 123/2026"
+                value={numeroMedidaProtetiva}
+                onChange={(e) => setNumeroMedidaProtetiva(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="numeroGuiaAcolhimento">
+                Número da guia de acolhimento
+              </Label>
+              <Input
+                id="numeroGuiaAcolhimento"
+                name="numeroGuiaAcolhimento"
+                placeholder="Ex.: GA-2026/045"
+                value={numeroGuiaAcolhimento}
+                onChange={(e) => setNumeroGuiaAcolhimento(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="territorio">Território / região</Label>
+              <Input
+                id="territorio"
+                name="territorio"
+                placeholder="Ex.: Santa Rosa, Centro, Enseada..."
+                value={territorio}
+                onChange={(e) => setTerritorio(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 5. Equipe técnica do acolhimento */}
+      {vagaId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="w-4 h-4 text-teal-700" />
+              5. Equipe técnica do acolhimento
+            </CardTitle>
+            <CardDescription>
+              Pré-preenchido com os profissionais da unidade. Edite se este
+              caso específico tiver outra equipe de referência.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <Label htmlFor="asVaraInfancia">
+                Assistente Social Vara da Infância
+              </Label>
+              <Input
+                id="asVaraInfancia"
+                name="asVaraInfancia"
+                placeholder="Ex.: Patrícia"
+                value={asVaraInfancia}
+                onChange={(e) => setAsVaraInfancia(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="psicVaraInfancia">
+                Psicólogo(a) Vara da Infância
+              </Label>
+              <Input
+                id="psicVaraInfancia"
+                name="psicVaraInfancia"
+                placeholder="Ex.: Tainá"
+                value={psicVaraInfancia}
+                onChange={(e) => setPsicVaraInfancia(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="asCreas">Assistente Social CREAS</Label>
+              <Input
+                id="asCreas"
+                name="asCreas"
+                placeholder="Ex.: Denise"
+                value={asCreas}
+                onChange={(e) => setAsCreas(e.target.value)}
               />
             </div>
           </CardContent>

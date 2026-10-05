@@ -67,6 +67,49 @@ export const admitirSchema = z.object({
   regime: z.enum(regimesAcolhimento, {
     message: 'Selecione o regime',
   }),
+
+  // Dados processuais (opcionais)
+  numeroProcesso: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  numeroMedidaProtetiva: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  numeroGuiaAcolhimento: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  territorio: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  asVaraInfancia: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  psicVaraInfancia: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  asCreas: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type AdmitirInput = z.infer<typeof admitirSchema>;

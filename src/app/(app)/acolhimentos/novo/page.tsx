@@ -19,6 +19,9 @@ export interface UnidadeOption {
   tipo: string;
   cidade: string;
   uf: string;
+  asVaraInfancia: string | null;
+  psicVaraInfancia: string | null;
+  asCreas: string | null;
   vagas: VagaOption[];
 }
 
@@ -48,7 +51,7 @@ export default async function NovaAdmissaoPage() {
   `);
   const acolhidos = acolhidosRaw as unknown as AcolhidoOption[];
 
-  // 2. Unidades ativas + vagas DISPONIVEL
+  // 2. Unidades ativas + vagas DISPONIVEL + equipe técnica
   const linhasRaw = await db.execute(sql`
     SELECT
       u.id AS unidade_id,
@@ -56,6 +59,9 @@ export default async function NovaAdmissaoPage() {
       u.tipo AS unidade_tipo,
       u.cidade AS unidade_cidade,
       u.uf AS unidade_uf,
+      u.as_vara_infancia AS unidade_as_vara,
+      u.psic_vara_infancia AS unidade_psic_vara,
+      u.as_creas AS unidade_as_creas,
       v.id AS vaga_id,
       v.numero_leito AS vaga_numero
     FROM unidades u
@@ -72,6 +78,9 @@ export default async function NovaAdmissaoPage() {
     unidade_tipo: string;
     unidade_cidade: string;
     unidade_uf: string;
+    unidade_as_vara: string | null;
+    unidade_psic_vara: string | null;
+    unidade_as_creas: string | null;
     vaga_id: string | null;
     vaga_numero: number | null;
   }>;
@@ -87,6 +96,9 @@ export default async function NovaAdmissaoPage() {
         tipo: l.unidade_tipo,
         cidade: l.unidade_cidade,
         uf: l.unidade_uf,
+        asVaraInfancia: l.unidade_as_vara,
+        psicVaraInfancia: l.unidade_psic_vara,
+        asCreas: l.unidade_as_creas,
         vagas: [],
       };
       mapa.set(l.unidade_id, unidade);

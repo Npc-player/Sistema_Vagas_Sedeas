@@ -90,6 +90,12 @@ export const acolhidoSchema = z.object({
     .max(2000, 'Máximo de 2000 caracteres')
     .optional()
     .or(z.literal('')),
+
+  grupoFamiliar: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type AcolhidoInput = z.infer<typeof acolhidoSchema>;

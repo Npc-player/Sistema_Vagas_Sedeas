@@ -62,6 +62,13 @@ export async function admitirAction(
     motivo: formData.get('motivo'),
     motivoDetalhe: formData.get('motivoDetalhe') ?? '',
     regime: formData.get('regime'),
+    numeroProcesso: formData.get('numeroProcesso') ?? '',
+    numeroMedidaProtetiva: formData.get('numeroMedidaProtetiva') ?? '',
+    numeroGuiaAcolhimento: formData.get('numeroGuiaAcolhimento') ?? '',
+    territorio: formData.get('territorio') ?? '',
+    asVaraInfancia: formData.get('asVaraInfancia') ?? '',
+    psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
+    asCreas: formData.get('asCreas') ?? '',
   };
 
   const parsed = admitirSchema.safeParse(raw);
@@ -176,6 +183,9 @@ export async function admitirAction(
         INSERT INTO acolhimentos (
           acolhido_id, unidade_id, data_acolhimento,
           motivo_acolhimento, motivo_detalhe, regime,
+          numero_processo, numero_medida_protetiva,
+          numero_guia_acolhimento, territorio,
+          as_vara_infancia, psic_vara_infancia, as_creas,
           ativo, criado_por_user_id, protocolo
         ) VALUES (
           ${data.acolhidoId},
@@ -184,6 +194,13 @@ export async function admitirAction(
           ${data.motivo},
           ${data.motivoDetalhe || null},
           ${data.regime},
+          ${data.numeroProcesso || null},
+          ${data.numeroMedidaProtetiva || null},
+          ${data.numeroGuiaAcolhimento || null},
+          ${data.territorio || null},
+          ${data.asVaraInfancia || null},
+          ${data.psicVaraInfancia || null},
+          ${data.asCreas || null},
           true,
           ${session.userId},
           ${protocoloGerado}
@@ -227,6 +244,13 @@ export async function admitirAction(
         regime: data.regime,
         motivo: data.motivo,
         dataAcolhimento: data.dataAcolhimento,
+        numeroProcesso: data.numeroProcesso || null,
+        numeroMedidaProtetiva: data.numeroMedidaProtetiva || null,
+        numeroGuiaAcolhimento: data.numeroGuiaAcolhimento || null,
+        territorio: data.territorio || null,
+        asVaraInfancia: data.asVaraInfancia || null,
+        psicVaraInfancia: data.psicVaraInfancia || null,
+        asCreas: data.asCreas || null,
       },
     });
   } catch (error) {
