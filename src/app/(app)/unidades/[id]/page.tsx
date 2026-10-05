@@ -19,6 +19,7 @@ import {
   Phone,
   Mail,
   User,
+  Users,
   Building2,
   BedDouble,
   Pencil,
@@ -265,6 +266,46 @@ export default async function DetalheUnidadePage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Equipe técnica de referência */}
+          {(unidade.as_vara_infancia ||
+            unidade.psic_vara_infancia ||
+            unidade.as_creas) && (
+            <Card className="border-slate-200">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="w-4 h-4 text-teal-700" />
+                  Equipe técnica de referência
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Assistente Social — Vara da Infância
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {unidade.as_vara_infancia ?? '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Psicólogo(a) — Vara da Infância
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {unidade.psic_vara_infancia ?? '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Assistente Social — CREAS
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {unidade.as_creas ?? '—'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Coluna direita: mapa de vagas */}

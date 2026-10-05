@@ -237,3 +237,81 @@ export const desacolherSchema = z.object({
 });
 
 export type DesacolherInput = z.infer<typeof desacolherSchema>;
+
+// =====================================================
+// Edição de acolhimento
+// =====================================================
+export const editarAcolhimentoSchema = z.object({
+  id: z.string().uuid('ID inválido'),
+
+  dataAcolhimento: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida')
+    .refine(
+      (val) => {
+        const data = new Date(val + 'T00:00:00');
+        const hoje = new Date();
+        hoje.setHours(23, 59, 59, 999);
+        return data <= hoje;
+      },
+      { message: 'A data não pode ser no futuro' }
+    ),
+
+  motivo: z.enum(motivosAcolhimento, {
+    message: 'Selecione o motivo do acolhimento',
+  }),
+
+  motivoDetalhe: z
+    .string()
+    .max(2000, 'Máximo de 2000 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  regime: z.enum(regimesAcolhimento, {
+    message: 'Selecione o regime',
+  }),
+
+  numeroProcesso: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  numeroMedidaProtetiva: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  numeroGuiaAcolhimento: z
+    .string()
+    .max(50, 'Máximo de 50 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  territorio: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  asVaraInfancia: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  psicVaraInfancia: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  asCreas: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+});
+
+export type EditarAcolhimentoInput = z.infer<typeof editarAcolhimentoSchema>;

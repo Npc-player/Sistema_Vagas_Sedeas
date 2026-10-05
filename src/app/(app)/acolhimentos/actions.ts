@@ -9,6 +9,7 @@ import { db } from '@/db/client';
 import {
   admitirSchema,
   desacolherSchema,
+  editarAcolhimentoSchema,
   verificarCompatibilidade,
 } from '@/lib/validations/acolhimento';
 import { calcularIdade } from '@/lib/validations/acolhido';
@@ -432,4 +433,132 @@ export async function desacolherAction(
   revalidatePath('/acolhimentos');
   revalidatePath('/vagas');
   redirect(`/acolhimentos/${data.acolhimentoId}`);
+}
+
+// =====================================================
+// EDITAR acolhimento (dados operacionais)
+// =====================================================
+export async function editarAcolhimentoAction(
+  _prevState: AcolhimentoActionState,
+  formData: FormData
+): Promise<AcolhimentoActionState> {
+  let session: Session;
+  try {
+    session = await requirePermission(can.cadastrarAcolhido);
+  } catch (e) {
+    if (e instanceof Error && e.message === 'FORBIDDEN') {
+      return { error: 'Você não tem permissão para editar acolhimentos.' };
+    }
+    if (e instanceof Error && e.message === 'UNAUTHENTICATED') {
+      return { error: 'Sessão expirada. Faça login novamente.' };
+    }
+    throw e;
+  }
+
+  const raw = {
+    id: formData.get('id'),
+    dataAcolhimento: formData.get('dataAcolhimento'),
+    motivo: formData.get('motivo'),
+    motivoDetalhe: formData.get('motivoDetalhe') ?? '',
+    regime: formData.get('regime'),
+    numeroProcesso: formData.get('numeroProcesso') ?? '',
+    numeroMedidaProtetiva: formData.get('numeroMedidaProtetiva') ?? '',
+    numeroGuiaAcolhimento: formData.get('numeroGuiaAcolhimento') ?? '',
+    territorio: formData.get('territorio') ?? '',
+    asVaraInfancia: formData.get('asVaraInfancia') ?? '',
+    psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
+    asCreas: formData.get('asCreas') ?? '',
+  };
+
+  const parsed = editarAcolhimentoSchema.safeParse(raw);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [key, msgs] of Object.entries(
+      parsed.error.flatten().fieldErrors
+    )) {
+      if (msgs && msgs.length > 0) fieldErrors[key] = msgs;
+    }
+    return { fieldErrors };
+  }
+
+  const data = parsed.data;
+
+  try {
+    await db.transaction(async (tx) => {
+      const antes = await tx.execute(sql`
+        SELECT id, ativo, regime
+        FROM acolhimentos
+        WHERE id = ${data.id}
+        LIMIT 1
+      `);
+
+      if (antes.length === 0) throw new Error('NOT_FOUND');
+
+      const acolhimento = antes[0] as { ativo: boolean; regime: string };
+
+      if (!acolhimento.ativo) {
+        throw new Error('ACOLHIMENTO_ENCERRADO');
+      }
+
+      // RN-06: conversão de regime requer justificativa
+      if (
+        acolhimento.regime === 'PROVISORIO' &&
+        data.regime === 'DEFINITIVO' &&
+        !data.motivoDetalhe
+      ) {
+        throw new Error('CONVERSAO_SEM_JUSTIFICATIVA');
+      }
+
+      await tx.execute(sql`
+        UPDATE acolhimentos SET
+          data_acolhimento = ${data.dataAcolhimento}::date,
+          motivo_acolhimento = ${data.motivo},
+          motivo_detalhe = ${data.motivoDetalhe || null},
+          regime = ${data.regime}::regime_acolhimento,
+          numero_processo = ${data.numeroProcesso || null},
+          numero_medida_protetiva = ${data.numeroMedidaProtetiva || null},
+          numero_guia_acolhimento = ${data.numeroGuiaAcolhimento || null},
+          territorio = ${data.territorio || null},
+          as_vara_infancia = ${data.asVaraInfancia || null},
+          psic_vara_infancia = ${data.psicVaraInfancia || null},
+          as_creas = ${data.asCreas || null},
+          updated_at = NOW()
+        WHERE id = ${data.id}
+      `);
+    });
+
+    const context = await buildContext(session);
+    await audit(context, {
+      action: 'UPDATE',
+      entity: 'acolhimentos',
+      entityId: data.id,
+      after: {
+        dataAcolhimento: data.dataAcolhimento,
+        motivo: data.motivo,
+        regime: data.regime,
+        numeroProcesso: data.numeroProcesso || null,
+        territorio: data.territorio || null,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      const msg = error.message;
+      if (msg === 'NOT_FOUND') return { error: 'Acolhimento não encontrado.' };
+      if (msg === 'ACOLHIMENTO_ENCERRADO') {
+        return { error: 'Este acolhimento já foi encerrado e não pode ser editado.' };
+      }
+      if (msg === 'CONVERSAO_SEM_JUSTIFICATIVA') {
+        return {
+          error:
+            'A conversão de Provisório para Definitivo requer justificativa técnica (RN-06). Preencha o detalhamento do motivo.',
+        };
+      }
+    }
+    console.error('[editarAcolhimentoAction] erro:', error);
+    return { error: 'Erro ao salvar alterações. Tente novamente.' };
+  }
+
+  revalidatePath('/acolhimentos');
+  revalidatePath(`/acolhimentos/${data.id}`);
+  redirect(`/acolhimentos/${data.id}`);
 }

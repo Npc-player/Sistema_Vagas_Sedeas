@@ -6,7 +6,6 @@ import { db } from '@/db/client';
 import { getSession, can } from '@/lib/rbac';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BotaoDesacolher } from './botao-desacolher';
 import {
   Card,
   CardContent,
@@ -21,7 +20,10 @@ import {
   Calendar,
   FileText,
   ShieldCheck,
+  Users,
+  Pencil,
 } from 'lucide-react';
+import { BotaoDesacolher } from './botao-desacolher';
 
 const LABEL_REGIME: Record<string, string> = {
   PROVISORIO: 'Provisório',
@@ -46,6 +48,7 @@ const LABEL_MOTIVO_DESACOLHIMENTO: Record<string, string> = {
   MAIORIDADE: 'Maioridade',
   OBITO: 'Óbito',
   DECISAO_JUDICIAL: 'Decisão judicial',
+  EVASAO: 'Evasão',
 };
 
 interface AcolhimentoDetalhe {
@@ -64,6 +67,13 @@ interface AcolhimentoDetalhe {
   motivo_acolhimento: string;
   motivo_detalhe: string | null;
   regime: string;
+  numero_processo: string | null;
+  numero_medida_protetiva: string | null;
+  numero_guia_acolhimento: string | null;
+  territorio: string | null;
+  as_vara_infancia: string | null;
+  psic_vara_infancia: string | null;
+  as_creas: string | null;
   data_desacolhimento: string | null;
   motivo_desacolhimento: string | null;
   motivo_desacolhimento_detalhe: string | null;
@@ -101,6 +111,13 @@ export default async function DetalheAcolhimentoPage({
       ac.motivo_acolhimento,
       ac.motivo_detalhe,
       ac.regime,
+      ac.numero_processo,
+      ac.numero_medida_protetiva,
+      ac.numero_guia_acolhimento,
+      ac.territorio,
+      ac.as_vara_infancia,
+      ac.psic_vara_infancia,
+      ac.as_creas,
       ac.data_desacolhimento,
       ac.motivo_desacolhimento,
       ac.motivo_desacolhimento_detalhe,
@@ -118,6 +135,17 @@ export default async function DetalheAcolhimentoPage({
 
   const acolhimento = (rows as unknown as AcolhimentoDetalhe[])[0];
   if (!acolhimento) notFound();
+
+  const temDadosProcessuais =
+    acolhimento.numero_processo ||
+    acolhimento.numero_medida_protetiva ||
+    acolhimento.numero_guia_acolhimento ||
+    acolhimento.territorio;
+
+  const temEquipeTecnica =
+    acolhimento.as_vara_infancia ||
+    acolhimento.psic_vara_infancia ||
+    acolhimento.as_creas;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -141,10 +169,7 @@ export default async function DetalheAcolhimentoPage({
                 {acolhimento.acolhido_nome}
               </h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <Badge
-                  variant="outline"
-                  className="font-mono text-xs"
-                >
+                <Badge variant="outline" className="font-mono text-xs">
                   {acolhimento.protocolo}
                 </Badge>
                 {acolhimento.ativo ? (
@@ -160,12 +185,20 @@ export default async function DetalheAcolhimentoPage({
           </div>
 
           {acolhimento.ativo && can.cadastrarAcolhido(session.role) && (
-            <BotaoDesacolher
-              acolhimentoId={acolhimento.id}
-              acolhidoNome={acolhimento.acolhido_nome}
-              protocolo={acolhimento.protocolo}
-              dataAcolhimento={acolhimento.data_acolhimento}
-            />
+            <div className="flex items-center gap-2">
+              <Link href={`/acolhimentos/${id}/editar`}>
+                <Button variant="outline">
+                  <Pencil className="w-4 h-4 mr-1.5" />
+                  Editar
+                </Button>
+              </Link>
+              <BotaoDesacolher
+                acolhimentoId={acolhimento.id}
+                acolhidoNome={acolhimento.acolhido_nome}
+                protocolo={acolhimento.protocolo}
+                dataAcolhimento={acolhimento.data_acolhimento}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -314,7 +347,105 @@ export default async function DetalheAcolhimentoPage({
           </CardContent>
         </Card>
 
-        {/* Desacolhimento (se aplicável) */}
+        {/* Dados processuais */}
+        {temDadosProcessuais && (
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="w-4 h-4 text-teal-700" />
+                Dados processuais e territoriais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {acolhimento.numero_processo && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Número do processo
+                  </p>
+                  <p className="text-slate-900 mt-0.5 font-mono text-xs">
+                    {acolhimento.numero_processo}
+                  </p>
+                </div>
+              )}
+              {acolhimento.numero_medida_protetiva && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Medida protetiva
+                  </p>
+                  <p className="text-slate-900 mt-0.5 font-mono text-xs">
+                    {acolhimento.numero_medida_protetiva}
+                  </p>
+                </div>
+              )}
+              {acolhimento.numero_guia_acolhimento && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Guia de acolhimento
+                  </p>
+                  <p className="text-slate-900 mt-0.5 font-mono text-xs">
+                    {acolhimento.numero_guia_acolhimento}
+                  </p>
+                </div>
+              )}
+              {acolhimento.territorio && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Território / região
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {acolhimento.territorio}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Equipe técnica */}
+        {temEquipeTecnica && (
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="w-4 h-4 text-teal-700" />
+                Equipe técnica de referência
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {acolhimento.as_vara_infancia && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Assistente Social — Vara da Infância
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {acolhimento.as_vara_infancia}
+                  </p>
+                </div>
+              )}
+              {acolhimento.psic_vara_infancia && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Psicólogo(a) — Vara da Infância
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {acolhimento.psic_vara_infancia}
+                  </p>
+                </div>
+              )}
+              {acolhimento.as_creas && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Assistente Social — CREAS
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {acolhimento.as_creas}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Desacolhimento */}
         {!acolhimento.ativo && acolhimento.data_desacolhimento && (
           <Card className="border-slate-200">
             <CardHeader>
