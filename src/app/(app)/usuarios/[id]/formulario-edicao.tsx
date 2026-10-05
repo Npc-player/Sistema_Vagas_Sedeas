@@ -44,6 +44,7 @@ interface FormularioEdicaoProps {
     id: string;
     email: string;
     nomeCompleto: string;
+    prontuario: string | null;
     role: string;
     unidadeId: string | null;
   };
@@ -133,6 +134,21 @@ export function FormularioEdicaoUsuario({
           </div>
 
           <div>
+            <Label htmlFor="prontuario">
+              Prontuário / matrícula funcional
+            </Label>
+            <Input
+              id="prontuario"
+              name="prontuario"
+              defaultValue={usuario.prontuario ?? ''}
+              placeholder="Ex.: 23.222"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Número exibido em relatórios oficiais (opcional).
+            </p>
+          </div>
+
+          <div>
             <Label htmlFor="role-select">Perfil de acesso *</Label>
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger id="role-select">
@@ -185,7 +201,7 @@ export function FormularioEdicaoUsuario({
         <Button
           type="button"
           variant="outline"
-          disabled={isPending || !mudou}
+          disabled={isPending}
           onClick={() => {
             setRole(usuario.role);
             setUnidadeId(usuario.unidadeId ?? '');
@@ -194,7 +210,7 @@ export function FormularioEdicaoUsuario({
         >
           Desfazer
         </Button>
-        <Button type="submit" disabled={isPending || !mudou}>
+        <Button type="submit" disabled={isPending}>
           {isPending ? 'Salvando...' : 'Salvar alterações'}
         </Button>
       </div>

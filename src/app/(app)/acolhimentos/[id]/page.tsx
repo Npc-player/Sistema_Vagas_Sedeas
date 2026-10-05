@@ -6,6 +6,8 @@ import { db } from '@/db/client';
 import { getSession, can } from '@/lib/rbac';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { BotaoSituacaoEspecial } from './botao-situacao-especial';
+import { LABEL_SITUACAO_ESPECIAL } from '@/lib/validations/acolhimento';
 import {
   Card,
   CardContent,
@@ -22,6 +24,7 @@ import {
   ShieldCheck,
   Users,
   Pencil,
+  AlertTriangle,
 } from 'lucide-react';
 import { BotaoDesacolher } from './botao-desacolher';
 
@@ -74,6 +77,9 @@ interface AcolhimentoDetalhe {
   as_vara_infancia: string | null;
   psic_vara_infancia: string | null;
   as_creas: string | null;
+  situacao_especial: string | null;
+  situacao_outros_detalhe: string | null;
+  situacao_especial_em: string | null;
   data_desacolhimento: string | null;
   motivo_desacolhimento: string | null;
   motivo_desacolhimento_detalhe: string | null;
@@ -118,6 +124,9 @@ export default async function DetalheAcolhimentoPage({
       ac.as_vara_infancia,
       ac.psic_vara_infancia,
       ac.as_creas,
+      ac.situacao_especial::text AS situacao_especial,
+      ac.situacao_outros_detalhe,
+      ac.situacao_especial_em,
       ac.data_desacolhimento,
       ac.motivo_desacolhimento,
       ac.motivo_desacolhimento_detalhe,
@@ -146,6 +155,8 @@ export default async function DetalheAcolhimentoPage({
     acolhimento.as_vara_infancia ||
     acolhimento.psic_vara_infancia ||
     acolhimento.as_creas;
+
+  const temSituacaoEspecial = !!acolhimento.situacao_especial;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -185,7 +196,13 @@ export default async function DetalheAcolhimentoPage({
           </div>
 
           {acolhimento.ativo && can.cadastrarAcolhido(session.role) && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <BotaoSituacaoEspecial
+                acolhimentoId={acolhimento.id}
+                situacaoAtual={acolhimento.situacao_especial}
+                situacaoDetalheAtual={acolhimento.situacao_outros_detalhe}
+                situacaoEmAtual={acolhimento.situacao_especial_em}
+              />
               <Link href={`/acolhimentos/${id}/editar`}>
                 <Button variant="outline">
                   <Pencil className="w-4 h-4 mr-1.5" />
@@ -438,6 +455,51 @@ export default async function DetalheAcolhimentoPage({
                   </p>
                   <p className="text-slate-900 mt-0.5">
                     {acolhimento.as_creas}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+                {/* Situação especial */}
+        {temSituacaoEspecial && (
+          <Card className="border-amber-200 bg-amber-50/30">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+                <AlertTriangle className="w-4 h-4 text-amber-700" />
+                Situação especial
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div>
+                <p className="text-xs text-amber-700 uppercase tracking-wide">
+                  Situação
+                </p>
+                <p className="text-amber-900 mt-0.5 font-medium">
+                  {LABEL_SITUACAO_ESPECIAL[acolhimento.situacao_especial ?? ''] ??
+                    acolhimento.situacao_especial}
+                </p>
+              </div>
+              {acolhimento.situacao_outros_detalhe && (
+                <div>
+                  <p className="text-xs text-amber-700 uppercase tracking-wide">
+                    Detalhamento
+                  </p>
+                  <p className="text-amber-900 mt-0.5 whitespace-pre-wrap">
+                    {acolhimento.situacao_outros_detalhe}
+                  </p>
+                </div>
+              )}
+              {acolhimento.situacao_especial_em && (
+                <div>
+                  <p className="text-xs text-amber-700 uppercase tracking-wide">
+                    Registrada em
+                  </p>
+                  <p className="text-amber-900 mt-0.5">
+                    {new Date(
+                      acolhimento.situacao_especial_em + 'T00:00:00'
+                    ).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
               )}

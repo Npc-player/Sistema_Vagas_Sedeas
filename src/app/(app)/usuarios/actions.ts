@@ -74,6 +74,7 @@ export async function criarUsuarioAction(
   const raw = {
     email: (formData.get('email') ?? '').toString().trim().toLowerCase(),
     nomeCompleto: formData.get('nomeCompleto'),
+    prontuario: formData.get('prontuario') ?? '',
     role: formData.get('role'),
     unidadeId: formData.get('unidadeId') ?? '',
   };
@@ -131,10 +132,11 @@ export async function criarUsuarioAction(
     if (profileCheck.length === 0) {
       // Fallback: cria o profile manualmente
       await db.execute(sql`
-        INSERT INTO profiles (id, nome_completo, role, unidade_id, ativo)
+        INSERT INTO profiles (id, nome_completo, prontuario, role, unidade_id, ativo)
         VALUES (
           ${novoUser.user.id},
           ${data.nomeCompleto},
+          ${data.prontuario || null},
           ${data.role}::user_role,
           ${data.unidadeId || null},
           true
@@ -150,6 +152,7 @@ export async function criarUsuarioAction(
       after: {
         email: data.email,
         nomeCompleto: data.nomeCompleto,
+        prontuario: data.prontuario || null,
         role: data.role,
         unidadeId: data.unidadeId || null,
       },
@@ -186,6 +189,7 @@ export async function editarUsuarioAction(
   const raw = {
     id: formData.get('id'),
     nomeCompleto: formData.get('nomeCompleto'),
+    prontuario: formData.get('prontuario') ?? '',
     role: formData.get('role'),
     unidadeId: formData.get('unidadeId') ?? '',
   };
@@ -215,6 +219,7 @@ export async function editarUsuarioAction(
     await db.execute(sql`
       UPDATE profiles SET
         nome_completo = ${data.nomeCompleto},
+        prontuario = ${data.prontuario || null},
         role = ${data.role}::user_role,
         unidade_id = ${data.unidadeId || null},
         updated_at = NOW()
@@ -228,6 +233,7 @@ export async function editarUsuarioAction(
       entityId: data.id,
       after: {
         nomeCompleto: data.nomeCompleto,
+        prontuario: data.prontuario || null,
         role: data.role,
         unidadeId: data.unidadeId || null,
       },

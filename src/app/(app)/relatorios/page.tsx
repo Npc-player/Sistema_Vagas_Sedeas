@@ -13,6 +13,7 @@ import { FiltrosRelatorio, type UnidadeOption } from './filtros';
 import { PreviewCentral } from './preview-central';
 import { PreviewFluxo } from './preview-fluxo';
 import { FileBarChart2 } from 'lucide-react';
+import { BotaoExportarPDF } from './botao-exportar';
 
 interface PageProps {
   searchParams: Promise<{
@@ -88,20 +89,23 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
       {temParametros ? (
         <>
           {/* Identificação do relatório */}
-          <div className="mb-4 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-            <div>
-              <span className="text-slate-500">Período:</span>{' '}
-              <strong className="text-slate-900">{labelPeriodo}</strong>
+          <div className="mb-4 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <div>
+                <span className="text-slate-500">Período:</span>{' '}
+                <strong className="text-slate-900">{labelPeriodo}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Tipo:</span>{' '}
+                <strong className="text-slate-900">
+                  {tipoPeriodo === 'PERSONALIZADO'
+                    ? 'Personalizado'
+                    : tipoPeriodo.charAt(0) +
+                      tipoPeriodo.slice(1).toLowerCase()}
+                </strong>
+              </div>
             </div>
-            <div>
-              <span className="text-slate-500">Tipo:</span>{' '}
-              <strong className="text-slate-900">
-                {tipoPeriodo === 'PERSONALIZADO'
-                  ? 'Personalizado'
-                  : tipoPeriodo.charAt(0) +
-                    tipoPeriodo.slice(1).toLowerCase()}
-              </strong>
-            </div>
+            <BotaoExportarPDF />
           </div>
 
           {/* Relatório selecionado */}

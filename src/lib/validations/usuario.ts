@@ -35,6 +35,11 @@ export const criarUsuarioSchema = z
       .string()
       .min(3, 'Nome deve ter pelo menos 3 caracteres')
       .max(200),
+    prontuario: z
+      .string()
+      .max(30, 'Máximo de 30 caracteres')
+      .optional()
+      .or(z.literal('')),
     role: z.enum(rolesUsuario, { message: 'Selecione um perfil' }),
     unidadeId: z
       .string()
@@ -60,6 +65,11 @@ export const editarUsuarioSchema = z
       .string()
       .min(3, 'Nome deve ter pelo menos 3 caracteres')
       .max(200),
+    prontuario: z
+      .string()
+      .max(30, 'Máximo de 30 caracteres')
+      .optional()
+      .or(z.literal('')),
     role: z.enum(rolesUsuario, { message: 'Selecione um perfil' }),
     unidadeId: z
       .string()

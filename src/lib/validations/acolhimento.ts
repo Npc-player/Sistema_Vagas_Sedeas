@@ -315,3 +315,56 @@ export const editarAcolhimentoSchema = z.object({
 });
 
 export type EditarAcolhimentoInput = z.infer<typeof editarAcolhimentoSchema>;
+
+// =====================================================
+// Situação especial (evasão / outros)
+// =====================================================
+export const situacoesEspeciais = ['EVASAO', 'OUTROS'] as const;
+
+export const LABEL_SITUACAO_ESPECIAL: Record<string, string> = {
+  EVASAO: 'Evasão (acolhido fugiu da unidade)',
+  OUTROS: 'Outros (família extensa/substituta aguardando decisão judicial)',
+};
+
+export const registrarSituacaoEspecialSchema = z
+  .object({
+    acolhimentoId: z.string().uuid('ID inválido'),
+
+    situacaoEspecial: z.enum(situacoesEspeciais, {
+      message: 'Selecione a situação',
+    }),
+
+    situacaoOutrosDetalhe: z
+      .string()
+      .max(2000, 'Máximo de 2000 caracteres')
+      .optional()
+      .or(z.literal('')),
+
+    situacaoEspecialEm: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida')
+      .refine(
+        (val) => {
+          const data = new Date(val + 'T00:00:00');
+          const hoje = new Date();
+          hoje.setHours(23, 59, 59, 999);
+          return data <= hoje;
+        },
+        { message: 'A data não pode ser no futuro' }
+      ),
+  })
+  .refine(
+    (data) =>
+      data.situacaoEspecial !== 'OUTROS' ||
+      (data.situacaoOutrosDetalhe &&
+        data.situacaoOutrosDetalhe.trim().length >= 20),
+    {
+      message:
+        'Para a situação "Outros", descreva o caso com pelo menos 20 caracteres',
+      path: ['situacaoOutrosDetalhe'],
+    }
+  );
+
+export type RegistrarSituacaoEspecialInput = z.infer<
+  typeof registrarSituacaoEspecialSchema
+>;

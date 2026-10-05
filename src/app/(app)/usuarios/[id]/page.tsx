@@ -154,6 +154,7 @@ export default async function GerenciarUsuarioPage({
           id: usuario.id,
           email: usuario.email,
           nomeCompleto: usuario.nomeCompleto,
+          prontuario: usuario.prontuario,
           role: usuario.role,
           unidadeId: usuario.unidadeId,
         }}

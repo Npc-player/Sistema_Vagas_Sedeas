@@ -1,7 +1,4 @@
 // src/lib/rbac/queries.ts
-// Queries de leitura de usuários (profiles + auth.users).
-// Usa Drizzle — o RBAC é validado antes de chamar.
-
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 
@@ -9,6 +6,7 @@ export interface UsuarioRow {
   id: string;
   email: string;
   nomeCompleto: string;
+  prontuario: string | null;
   role: string;
   unidadeId: string | null;
   unidadeNome: string | null;
@@ -37,6 +35,7 @@ export async function listarUsuarios(): Promise<UsuarioRow[]> {
       p.id,
       u.email,
       p.nome_completo AS "nomeCompleto",
+      p.prontuario,
       p.role::text AS role,
       p.unidade_id AS "unidadeId",
       un.nome AS "unidadeNome",
@@ -59,6 +58,7 @@ export async function buscarUsuarioPorId(
       p.id,
       u.email,
       p.nome_completo AS "nomeCompleto",
+      p.prontuario,
       p.role::text AS role,
       p.unidade_id AS "unidadeId",
       un.nome AS "unidadeNome",

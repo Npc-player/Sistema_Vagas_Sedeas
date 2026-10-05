@@ -38,3 +38,8 @@ export const motivoDesacolhimentoEnum = pgEnum('motivo_desacolhimento', [
   'DECISAO_JUDICIAL',
   'EVASAO',
 ]);
+
+export const situacaoEspecialAcolhimentoEnum = pgEnum(
+  'situacao_especial_acolhimento',
+  ['EVASAO', 'OUTROS']
+);

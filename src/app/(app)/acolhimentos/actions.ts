@@ -10,6 +10,7 @@ import {
   admitirSchema,
   desacolherSchema,
   editarAcolhimentoSchema,
+  registrarSituacaoEspecialSchema,
   verificarCompatibilidade,
 } from '@/lib/validations/acolhimento';
 import { calcularIdade } from '@/lib/validations/acolhido';
@@ -561,4 +562,99 @@ export async function editarAcolhimentoAction(
   revalidatePath('/acolhimentos');
   revalidatePath(`/acolhimentos/${data.id}`);
   redirect(`/acolhimentos/${data.id}`);
+}
+
+// =====================================================
+// REGISTRAR SITUAÇÃO ESPECIAL (evasão / outros)
+// =====================================================
+export async function registrarSituacaoEspecialAction(
+  _prevState: AcolhimentoActionState,
+  formData: FormData
+): Promise<AcolhimentoActionState> {
+  let session: Session;
+  try {
+    session = await requirePermission(can.cadastrarAcolhido);
+  } catch (e) {
+    if (e instanceof Error && e.message === 'FORBIDDEN') {
+      return { error: 'Você não tem permissão para registrar esta operação.' };
+    }
+    if (e instanceof Error && e.message === 'UNAUTHENTICATED') {
+      return { error: 'Sessão expirada. Faça login novamente.' };
+    }
+    throw e;
+  }
+
+  const raw = {
+    acolhimentoId: formData.get('acolhimentoId'),
+    situacaoEspecial: formData.get('situacaoEspecial'),
+    situacaoOutrosDetalhe: formData.get('situacaoOutrosDetalhe') ?? '',
+    situacaoEspecialEm: formData.get('situacaoEspecialEm'),
+  };
+
+  const parsed = registrarSituacaoEspecialSchema.safeParse(raw);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [key, msgs] of Object.entries(
+      parsed.error.flatten().fieldErrors
+    )) {
+      if (msgs && msgs.length > 0) fieldErrors[key] = msgs;
+    }
+    return { fieldErrors };
+  }
+
+  const data = parsed.data;
+
+  try {
+    await db.transaction(async (tx) => {
+      const antes = await tx.execute(sql`
+        SELECT id, ativo
+        FROM acolhimentos
+        WHERE id = ${data.acolhimentoId}
+        LIMIT 1
+      `);
+      if (antes.length === 0) throw new Error('NOT_FOUND');
+
+      const acolhimento = antes[0] as { ativo: boolean };
+      if (!acolhimento.ativo) {
+        throw new Error('ACOLHIMENTO_ENCERRADO');
+      }
+
+      await tx.execute(sql`
+        UPDATE acolhimentos SET
+          situacao_especial = ${data.situacaoEspecial}::situacao_especial_acolhimento,
+          situacao_outros_detalhe = ${data.situacaoOutrosDetalhe || null},
+          situacao_especial_em = ${data.situacaoEspecialEm}::date,
+          updated_at = NOW()
+        WHERE id = ${data.acolhimentoId}
+      `);
+    });
+
+    const context = await buildContext(session);
+    await audit(context, {
+      action: 'UPDATE',
+      entity: 'acolhimentos',
+      entityId: data.acolhimentoId,
+      metadata: {
+        operacao: 'SITUACAO_ESPECIAL',
+        situacao: data.situacaoEspecial,
+        detalhe: data.situacaoOutrosDetalhe || null,
+        data: data.situacaoEspecialEm,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'NOT_FOUND') {
+        return { error: 'Acolhimento não encontrado.' };
+      }
+      if (error.message === 'ACOLHIMENTO_ENCERRADO') {
+        return { error: 'Este acolhimento já foi encerrado.' };
+      }
+    }
+    console.error('[registrarSituacaoEspecialAction] erro:', error);
+    return { error: 'Erro ao registrar situação. Tente novamente.' };
+  }
+
+  revalidatePath('/acolhimentos');
+  revalidatePath(`/acolhimentos/${data.acolhimentoId}`);
+  return { success: true };
 }

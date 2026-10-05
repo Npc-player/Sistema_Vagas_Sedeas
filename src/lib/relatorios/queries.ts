@@ -17,12 +17,12 @@ function allRows<T>(result: unknown): T[] {
 }
 
 export interface Periodo {
-  inicio: string; // YYYY-MM-DD
-  fim: string;    // YYYY-MM-DD
+  inicio: string;
+  fim: string;
 }
 
 // =====================================================
-// Central de Regulação — dados por unidade
+// Central de Regulação
 // =====================================================
 export interface LinhaCentralRegulacao {
   unidadeId: string;
@@ -53,26 +53,30 @@ export async function getCentralRegulacao(
       u.tipo::text AS "unidadeTipo",
       u.capacidade_total AS "metaConveniada",
 
+      -- ENTRADAS: acolhimentos iniciados no período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
           AND a.data_acolhimento BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
       ), 0) AS entradas,
 
+      -- SAÍDAS: desacolhimentos formais no período (não conta situações especiais)
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
           AND a.data_desacolhimento BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
-          AND (a.motivo_desacolhimento IS NULL OR a.motivo_desacolhimento <> 'EVASAO')
+          AND a.situacao_especial IS NULL
       ), 0) AS saidas,
 
+      -- EVASÕES/OUTROS: acolhimentos com situação especial registrada no período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
-          AND a.data_desacolhimento BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
-          AND a.motivo_desacolhimento = 'EVASAO'
+          AND a.situacao_especial IS NOT NULL
+          AND a.situacao_especial_em BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
       ), 0) AS "evasoesOutros",
 
+      -- ACOLHIDOS: ativos no fim do período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
@@ -80,6 +84,7 @@ export async function getCentralRegulacao(
           AND (a.data_desacolhimento IS NULL OR a.data_desacolhimento > ${periodo.fim}::date)
       ), 0) AS acolhidos,
 
+      -- PERMANECENTES: ativos que já estavam antes do início do período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
@@ -114,9 +119,6 @@ export async function getCentralRegulacao(
   }));
 }
 
-// =====================================================
-// Totais consolidados
-// =====================================================
 export interface TotaisCentralRegulacao {
   metaConveniada: number;
   entradas: number;
@@ -172,29 +174,19 @@ export function calcularPeriodo(
   if (tipo === 'ANUAL') {
     const inicio = new Date(base.getFullYear(), 0, 1);
     const fim = new Date(base.getFullYear(), 11, 31);
-    return {
-      inicio: formatarData(inicio),
-      fim: formatarData(fim),
-    };
+    return { inicio: formatarData(inicio), fim: formatarData(fim) };
   }
 
   if (tipo === 'TRIMESTRAL') {
     const trimestre = Math.floor(base.getMonth() / 3);
     const inicio = new Date(base.getFullYear(), trimestre * 3, 1);
     const fim = new Date(base.getFullYear(), trimestre * 3 + 3, 0);
-    return {
-      inicio: formatarData(inicio),
-      fim: formatarData(fim),
-    };
+    return { inicio: formatarData(inicio), fim: formatarData(fim) };
   }
 
-  // MENSAL
   const inicio = new Date(base.getFullYear(), base.getMonth(), 1);
   const fim = new Date(base.getFullYear(), base.getMonth() + 1, 0);
-  return {
-    inicio: formatarData(inicio),
-    fim: formatarData(fim),
-  };
+  return { inicio: formatarData(inicio), fim: formatarData(fim) };
 }
 
 function formatarData(d: Date): string {
@@ -205,7 +197,7 @@ function formatarData(d: Date): string {
 }
 
 // =====================================================
-// Fluxo Mensal Detalhado — lista nominal
+// Fluxo Detalhado
 // =====================================================
 export interface LinhaFluxoDetalhado {
   acolhimentoId: string;
@@ -239,6 +231,9 @@ export interface LinhaFluxoDetalhado {
   asVaraInfancia: string | null;
   psicVaraInfancia: string | null;
   asCreas: string | null;
+
+  situacaoEspecial: string | null;
+  situacaoOutrosDetalhe: string | null;
 
   dataDesacolhimento: string | null;
   motivoDesacolhimento: string | null;
@@ -284,6 +279,9 @@ export async function getFluxoDetalhado(
       COALESCE(ac.psic_vara_infancia, u.psic_vara_infancia) AS "psicVaraInfancia",
       COALESCE(ac.as_creas, u.as_creas) AS "asCreas",
 
+      ac.situacao_especial::text AS "situacaoEspecial",
+      ac.situacao_outros_detalhe AS "situacaoOutrosDetalhe",
+
       ac.data_desacolhimento AS "dataDesacolhimento",
       ac.motivo_desacolhimento::text AS "motivoDesacolhimento",
       ac.ativo
@@ -303,7 +301,10 @@ export async function getFluxoDetalhado(
   const linhas = allRows<Omit<LinhaFluxoDetalhado, 'cpf' | 'rg'>>(result);
 
   const ids = linhas.map((l) => l.acolhidoId);
-  const documentos = new Map<string, { cpf: string | null; rg: string | null }>();
+  const documentos = new Map<
+    string,
+    { cpf: string | null; rg: string | null }
+  >();
 
   if (ids.length > 0) {
     const secret = process.env.FIELD_ENCRYPTION_KEY;
@@ -323,10 +324,7 @@ export async function getFluxoDetalhado(
           docResult
         )[0];
         if (doc) {
-          documentos.set(acolhidoId, {
-            cpf: doc.cpf,
-            rg: doc.rg,
-          });
+          documentos.set(acolhidoId, { cpf: doc.cpf, rg: doc.rg });
         }
       } catch (error) {
         console.error('[getFluxoDetalhado] erro ao descriptografar:', error);

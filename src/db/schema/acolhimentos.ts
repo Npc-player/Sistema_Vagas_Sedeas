@@ -1,6 +1,6 @@
 // src/db/schema/acolhimentos.ts
 import { pgTable, uuid, text, date, boolean, timestamp, index } from 'drizzle-orm/pg-core';
-import { regimeAcolhimentoEnum, motivoDesacolhimentoEnum } from './enums';
+import { regimeAcolhimentoEnum, motivoDesacolhimentoEnum, situacaoEspecialAcolhimentoEnum, } from './enums';
 
 export const acolhimentos = pgTable('acolhimentos', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -21,6 +21,11 @@ export const acolhimentos = pgTable('acolhimentos', {
   asVaraInfancia: text('as_vara_infancia'),
   psicVaraInfancia: text('psic_vara_infancia'),
   asCreas: text('as_creas'),
+
+  // Situação especial (evasão ou outros)
+  situacaoEspecial: situacaoEspecialAcolhimentoEnum('situacao_especial'),
+  situacaoOutrosDetalhe: text('situacao_outros_detalhe'),
+  situacaoEspecialEm: date('situacao_especial_em'),
 
   dataDesacolhimento: date('data_desacolhimento'),
   motivoDesacolhimento: motivoDesacolhimentoEnum('motivo_desacolhimento'),

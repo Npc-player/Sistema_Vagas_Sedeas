@@ -188,6 +188,63 @@ export function FormularioUsuario({ unidades }: FormularioUsuarioProps) {
           </div>
 
           <div>
+            <Label htmlFor="prontuario">
+              Prontuário / matrícula funcional
+            </Label>
+            <Input
+              id="prontuario"
+              name="prontuario"
+              placeholder="Ex.: 23.222"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Número exibido em relatórios oficiais (opcional).
+            </p>
+            {state.fieldErrors?.prontuario && (
+              <p className="text-sm text-red-600 mt-1">
+                {state.fieldErrors.prontuario.join(', ')}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="prontuario">
+              Prontuário / matrícula funcional
+            </Label>
+            <Input
+              id="prontuario"
+              name="prontuario"
+              placeholder="Ex.: 23.222"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Número exibido em relatórios oficiais (opcional).
+            </p>
+            {state.fieldErrors?.prontuario && (
+              <p className="text-sm text-red-600 mt-1">
+                {state.fieldErrors.prontuario.join(', ')}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="prontuario">
+              Prontuário / matrícula funcional
+            </Label>
+            <Input
+              id="prontuario"
+              name="prontuario"
+              placeholder="Ex.: 23.222"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Número exibido em relatórios oficiais (opcional).
+            </p>
+            {state.fieldErrors?.prontuario && (
+              <p className="text-sm text-red-600 mt-1">
+                {state.fieldErrors.prontuario.join(', ')}
+              </p>
+            )}
+          </div>
+
+          <div>
             <Label htmlFor="role-select">Perfil de acesso *</Label>
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger id="role-select">
