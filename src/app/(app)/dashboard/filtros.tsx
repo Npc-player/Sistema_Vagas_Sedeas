@@ -30,7 +30,7 @@ const LABEL_TIPO_CURTO: Record<string, string> = {
   ILPI: 'ILPI',
   SAICA: 'SAICA',
   CENTRO_DIA_IDOSO: 'Centro Dia',
-  JOSE_CALHERANI: 'José Calherani',
+  SAI: 'SAI — Serviço de Acolhimento Institucional',
   RESIDENCIA_INCLUSIVA: 'R.I.',
 };
 
@@ -39,8 +39,8 @@ const LABEL_TIPO_COMPLETO: Record<string, string> = {
   ILPI: 'ILPI — Instituição de Longa Permanência para Idosos',
   SAICA: 'SAICA — Acolhimento para Crianças e Adolescentes',
   CENTRO_DIA_IDOSO: 'Centro Dia do Idoso',
-  JOSE_CALHERANI: 'José Calherani',
-  RESIDENCIA_INCLUSIVA: 'Residência Inclusiva (R.I.)',
+  SAI: 'SAI — Serviço de Acolhimento Institucional',
+  RESIDENCIA_INCLUSIVA: 'R.I. — Residência Inclusiva',
 };
 
 const TIPOS = Object.keys(LABEL_TIPO_COMPLETO);

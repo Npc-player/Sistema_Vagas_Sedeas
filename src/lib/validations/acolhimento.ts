@@ -126,7 +126,7 @@ export type AdmitirInput = z.infer<typeof admitirSchema>;
 //   - SAICA: exclusivamente crianças e adolescentes (0 a 17 anos)
 //   - ILPI: idosos (60+ anos) em situação de dependência
 //   - Centro Dia Idoso: idosos (60+) — semi-aberto, mas mesmo perfil
-//   - José Calherani: idosos (60+)
+//   - SAI — Serviço de Acolhimento Institucional: idosos (60+)
 //   - Residência Inclusiva: adultos (18+) com deficiência
 // =====================================================
 
@@ -134,7 +134,7 @@ export const IDADE_MINIMA_POR_TIPO: Record<string, number> = {
   ILPI: 60,
   SAICA: 0,
   CENTRO_DIA_IDOSO: 60,
-  JOSE_CALHERANI: 60,
+  SAI: 60,
   RESIDENCIA_INCLUSIVA: 18,
 };
 
@@ -142,7 +142,7 @@ export const IDADE_MAXIMA_POR_TIPO: Record<string, number> = {
   ILPI: 120,
   SAICA: 17,
   CENTRO_DIA_IDOSO: 120,
-  JOSE_CALHERANI: 120,
+  SAI: 120,
   RESIDENCIA_INCLUSIVA: 120,
 };
 
@@ -190,8 +190,8 @@ export const LABEL_TIPO_ACOLHIMENTO: Record<string, string> = {
   ILPI: 'ILPI — Instituição de Longa Permanência para Idosos',
   SAICA: 'SAICA — Acolhimento para Crianças e Adolescentes',
   CENTRO_DIA_IDOSO: 'Centro Dia do Idoso',
-  JOSE_CALHERANI: 'José Calherani',
-  RESIDENCIA_INCLUSIVA: 'Residência Inclusiva (R.I.)',
+  SAI: 'SAI — Serviço de Acolhimento Institucional',
+  RESIDENCIA_INCLUSIVA: 'R.I. — Residência Inclusiva',
 };
 
 // =====================================================

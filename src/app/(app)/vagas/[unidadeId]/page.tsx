@@ -29,7 +29,7 @@ const LABEL_TIPO: Record<string, string> = {
   ILPI: 'ILPI',
   SAICA: 'SAICA',
   CENTRO_DIA_IDOSO: 'Centro Dia',
-  JOSE_CALHERANI: 'José Calherani',
+  SAI: 'SAI — Serviço de Acolhimento Institucional',
   RESIDENCIA_INCLUSIVA: 'R.I.',
 };
 

@@ -95,7 +95,7 @@ export default async function SobrePage() {
             pessoas acolhidas nos diferentes tipos de acolhimentos municipais
             — ILPI (Instituição de Longa Permanência para Idosos), SAICA
             (Serviço de Acolhimento Institucional para Crianças e
-            Adolescentes), Centro Dia Idoso, José Calherani e Residência
+            Adolescentes), Centro Dia Idoso, SAI — Serviço de Acolhimento Institucional e Residência
             Inclusiva. O sistema oferece rastreabilidade completa com trilha
             de auditoria imutável, criptografia de dados sensíveis (LGPD),
             controle de acesso baseado em perfis (RBAC), isolamento de dados

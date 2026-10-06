@@ -4,7 +4,7 @@
 import { sql, type SQL } from 'drizzle-orm';
 
 export interface FiltrosDashboard {
-  tipo?: string;      // ILPI, SAICA, CENTRO_DIA_IDOSO, JOSE_CALHERANI, RESIDENCIA_INCLUSIVA
+  tipo?: string;      // ILPI, SAICA, CENTRO_DIA_IDOSO, SAI, RESIDENCIA_INCLUSIVA
   unidadeId?: string; // UUID específico
 }
 

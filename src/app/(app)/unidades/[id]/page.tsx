@@ -29,8 +29,8 @@ const LABEL_TIPO: Record<string, string> = {
   ILPI: 'ILPI — Instituição de Longa Permanência para Idosos',
   SAICA: 'SAICA — Acolhimento para Crianças e Adolescentes',
   CENTRO_DIA_IDOSO: 'Centro Dia do Idoso',
-  JOSE_CALHERANI: 'José Calherani',
-  RESIDENCIA_INCLUSIVA: 'Residência Inclusiva (R.I.)',
+  SAI: 'SAI — Serviço de Acolhimento Institucional',
+  RESIDENCIA_INCLUSIVA: 'R.I. — Residência Inclusiva',
 };
 
 export default async function DetalheUnidadePage({

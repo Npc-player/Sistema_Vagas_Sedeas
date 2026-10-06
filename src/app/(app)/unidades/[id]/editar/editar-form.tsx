@@ -38,8 +38,8 @@ const TIPOS = [
   { value: 'ILPI', label: 'ILPI — Instituição de Longa Permanência para Idosos' },
   { value: 'SAICA', label: 'SAICA — Acolhimento para Crianças e Adolescentes' },
   { value: 'CENTRO_DIA_IDOSO', label: 'Centro Dia do Idoso' },
-  { value: 'JOSE_CALHERANI', label: 'José Calherani' },
-  { value: 'RESIDENCIA_INCLUSIVA', label: 'Residência Inclusiva (R.I.)' },
+  { value: 'SAI', label: 'SAI — Serviço de Acolhimento Institucional' },
+  { value: 'RESIDENCIA_INCLUSIVA', label: 'R.I. — Residência Inclusiva' },
   { value: 'CASA_PASSAGEM', label: 'Casa de Passagem (acolhimento provisório)' },
 ] as const;
 

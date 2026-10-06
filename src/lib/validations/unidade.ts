@@ -9,7 +9,7 @@ const tiposAcolhimento = [
   'ILPI',
   'SAICA',
   'CENTRO_DIA_IDOSO',
-  'JOSE_CALHERANI',
+  'SAI',
   'RESIDENCIA_INCLUSIVA',
   'CASA_PASSAGEM',
 ] as const;
