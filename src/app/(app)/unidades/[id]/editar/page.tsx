@@ -74,6 +74,7 @@ export default async function EditarUnidadePage({
           asVaraInfancia: unidade.as_vara_infancia ?? '',
           psicVaraInfancia: unidade.psic_vara_infancia ?? '',
           asCreas: unidade.as_creas ?? '',
+          psicCreas: unidade.psic_creas ?? '',
         }}
       />
     </div>

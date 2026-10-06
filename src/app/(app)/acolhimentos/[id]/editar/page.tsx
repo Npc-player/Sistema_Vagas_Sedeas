@@ -23,11 +23,13 @@ interface AcolhimentoEdicao {
   as_vara_infancia: string | null;
   psic_vara_infancia: string | null;
   as_creas: string | null;
+  psic_creas: string | null;
   unidade_id: string;
   unidade_nome: string;
   unidade_as_vara: string | null;
   unidade_psic_vara: string | null;
   unidade_as_creas: string | null;
+  unidade_psic_creas: string | null;
 }
 
 export default async function EditarAcolhimentoPage({
@@ -57,11 +59,13 @@ export default async function EditarAcolhimentoPage({
       ac.as_vara_infancia,
       ac.psic_vara_infancia,
       ac.as_creas,
+      ac.psic_creas,
       ac.unidade_id,
       u.nome AS unidade_nome,
       u.as_vara_infancia AS unidade_as_vara,
       u.psic_vara_infancia AS unidade_psic_vara,
-      u.as_creas AS unidade_as_creas
+      u.as_creas AS unidade_as_creas,
+      u.psic_creas AS unidade_psic_creas
     FROM acolhimentos ac
     INNER JOIN unidades u ON u.id = ac.unidade_id
     WHERE ac.id = ${id}
@@ -119,6 +123,8 @@ export default async function EditarAcolhimentoPage({
             acolhimento.unidade_psic_vara ??
             '',
           asCreas: acolhimento.as_creas ?? acolhimento.unidade_as_creas ?? '',
+          psicCreas:
+            acolhimento.psic_creas ?? acolhimento.unidade_psic_creas ?? '',
         }}
       />
     </div>

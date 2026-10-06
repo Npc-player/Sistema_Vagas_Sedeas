@@ -26,15 +26,6 @@ const LABEL_REGIME: Record<string, string> = {
   DEFINITIVO: 'Definitivo',
 };
 
-const LABEL_MOTIVO_DESACOLHIMENTO: Record<string, string> = {
-  REINTEGRACAO_FAMILIAR: 'Reintegração familiar',
-  TRANSFERENCIA: 'Transferência',
-  MAIORIDADE: 'Maioridade',
-  OBITO: 'Óbito',
-  DECISAO_JUDICIAL: 'Decisão judicial',
-  EVASAO: 'Evasão',
-};
-
 interface PreviewFluxoProps {
   linhas: LinhaFluxoDetalhado[];
 }
@@ -49,7 +40,7 @@ function agrupar(linhas: LinhaFluxoDetalhado[]): Grupo[] {
   const mapa = new Map<string, LinhaFluxoDetalhado[]>();
 
   for (const l of linhas) {
-    const chave = l.grupoFamiliar ?? `__sem_grupo__${l.acolhimentoId}`;
+    const chave = l.grupoIrmaos ?? `__sem_grupo__${l.acolhimentoId}`;
     if (!mapa.has(chave)) mapa.set(chave, []);
     mapa.get(chave)!.push(l);
   }
@@ -57,7 +48,6 @@ function agrupar(linhas: LinhaFluxoDetalhado[]): Grupo[] {
   const grupos: Grupo[] = [];
   for (const [chave, valores] of mapa.entries()) {
     if (chave.startsWith('__sem_grupo__')) {
-      // Cada acolhido sem grupo fica isolado
       for (const l of valores) {
         grupos.push({
           chave: l.acolhimentoId,
@@ -106,31 +96,31 @@ export function PreviewFluxo({ linhas }: PreviewFluxoProps) {
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 border-y border-slate-200 text-slate-700">
-                <th className="text-left px-2 py-2 font-medium w-16">Grupo</th>
-                <th className="text-left px-2 py-2 font-medium">Nome / Filiação</th>
+                <th className="text-left px-2 py-2 font-medium w-10">Nº</th>
+                <th className="text-left px-2 py-2 font-medium w-20">
+                  Grupo
+                </th>
+                <th className="text-left px-2 py-2 font-medium">
+                  Nome / Filiação
+                </th>
                 <th className="text-left px-2 py-2 font-medium w-28">
                   Nascimento
                 </th>
                 <th className="text-left px-2 py-2 font-medium w-24">
-                  Acolhimento
+                  Acolhido em
                 </th>
-                <th className="text-left px-2 py-2 font-medium w-32">
-                  Documento
-                </th>
+                <th className="text-left px-2 py-2 font-medium w-28">CPF</th>
                 <th className="text-left px-2 py-2 font-medium w-40">
-                  Processo / Guia
-                </th>
-                <th className="text-left px-2 py-2 font-medium w-32">
-                  Território
+                  MP / Guia
                 </th>
                 <th className="text-left px-2 py-2 font-medium">
                   Equipe Técnica
                 </th>
-                <th className="text-left px-2 py-2 font-medium w-40">
+                <th className="text-left px-2 py-2 font-medium w-36">
                   Motivo
                 </th>
-                <th className="text-left px-2 py-2 font-medium w-24">
-                  Status
+                <th className="text-left px-2 py-2 font-medium w-32">
+                  Território
                 </th>
               </tr>
             </thead>
@@ -141,6 +131,7 @@ export function PreviewFluxo({ linhas }: PreviewFluxoProps) {
                     key={l.acolhimentoId}
                     className="border-b border-slate-100 align-top"
                   >
+                    <td className="px-2 py-2 text-slate-500">{idx + 1}</td>
                     {idx === 0 ? (
                       <td
                         rowSpan={g.linhas.length}
@@ -202,20 +193,10 @@ export function PreviewFluxo({ linhas }: PreviewFluxoProps) {
                     </td>
 
                     <td className="px-2 py-2 font-mono text-[10px]">
-                      {l.cpf && <div>CPF: {l.cpf}</div>}
-                      {l.rg && <div>RG: {l.rg}</div>}
-                      {!l.cpf && !l.rg && (
-                        <span className="text-slate-400">—</span>
-                      )}
+                      {l.cpf ?? '—'}
                     </td>
 
                     <td className="px-2 py-2 text-[10px]">
-                      {l.numeroProcesso && (
-                        <div>
-                          <span className="text-slate-500">Proc.:</span>{' '}
-                          {l.numeroProcesso}
-                        </div>
-                      )}
                       {l.numeroMedidaProtetiva && (
                         <div>
                           <span className="text-slate-500">MP:</span>{' '}
@@ -228,67 +209,41 @@ export function PreviewFluxo({ linhas }: PreviewFluxoProps) {
                           {l.numeroGuiaAcolhimento}
                         </div>
                       )}
-                      {!l.numeroProcesso &&
-                        !l.numeroMedidaProtetiva &&
+                      {!l.numeroMedidaProtetiva &&
                         !l.numeroGuiaAcolhimento && (
                           <span className="text-slate-400">—</span>
                         )}
                     </td>
 
                     <td className="px-2 py-2 text-[10px]">
-                      {l.territorio ?? '—'}
-                    </td>
-
-                    <td className="px-2 py-2 text-[10px]">
                       {l.asVaraInfancia && (
-                        <div>A.S. Vara: {l.asVaraInfancia}</div>
+                        <div>
+                          <span className="text-slate-500">Vara Inf.:</span>{' '}
+                          {l.asVaraInfancia}
+                          {l.psicVaraInfancia &&
+                            ` / ${l.psicVaraInfancia}`}
+                        </div>
                       )}
-                      {l.psicVaraInfancia && (
-                        <div>Psic.: {l.psicVaraInfancia}</div>
+                      {l.asCreas && (
+                        <div>
+                          <span className="text-slate-500">CREAS:</span>{' '}
+                          {l.asCreas}
+                        </div>
                       )}
-                      {l.asCreas && <div>A.S. CREAS: {l.asCreas}</div>}
-                      {!l.asVaraInfancia &&
-                        !l.psicVaraInfancia &&
-                        !l.asCreas && (
-                          <span className="text-slate-400">—</span>
-                        )}
+                      {!l.asVaraInfancia && !l.asCreas && (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
 
                     <td className="px-2 py-2 text-[10px]">
-                      <div>
-                        {LABEL_MOTIVO[l.motivo] ?? l.motivo}
-                      </div>
+                      <div>{LABEL_MOTIVO[l.motivo] ?? l.motivo}</div>
                       <div className="text-slate-500">
                         {LABEL_REGIME[l.regime] ?? l.regime}
                       </div>
                     </td>
 
-                    <td className="px-2 py-2">
-                      {l.ativo ? (
-                        <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50 text-[10px]">
-                          Ativo
-                        </Badge>
-                      ) : (
-                        <div>
-                          <Badge variant="secondary" className="text-[10px]">
-                            Encerrado
-                          </Badge>
-                          {l.dataDesacolhimento && (
-                            <div className="text-[10px] text-slate-500 mt-1">
-                              {new Date(
-                                l.dataDesacolhimento + 'T00:00:00'
-                              ).toLocaleDateString('pt-BR')}
-                            </div>
-                          )}
-                          {l.motivoDesacolhimento && (
-                            <div className="text-[10px] text-slate-500">
-                              {LABEL_MOTIVO_DESACOLHIMENTO[
-                                l.motivoDesacolhimento
-                              ] ?? l.motivoDesacolhimento}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    <td className="px-2 py-2 text-[10px]">
+                      {l.territorio ?? '—'}
                     </td>
                   </tr>
                 ))

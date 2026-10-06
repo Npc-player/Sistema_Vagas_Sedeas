@@ -71,6 +71,7 @@ export async function admitirAction(
     asVaraInfancia: formData.get('asVaraInfancia') ?? '',
     psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
     asCreas: formData.get('asCreas') ?? '',
+    psicCreas: formData.get('psicCreas') ?? '',
   };
 
   const parsed = admitirSchema.safeParse(raw);
@@ -187,7 +188,7 @@ export async function admitirAction(
           motivo_acolhimento, motivo_detalhe, regime,
           numero_processo, numero_medida_protetiva,
           numero_guia_acolhimento, territorio,
-          as_vara_infancia, psic_vara_infancia, as_creas,
+          as_vara_infancia, psic_vara_infancia, as_creas, psic_creas,
           ativo, criado_por_user_id, protocolo
         ) VALUES (
           ${data.acolhidoId},
@@ -203,6 +204,7 @@ export async function admitirAction(
           ${data.asVaraInfancia || null},
           ${data.psicVaraInfancia || null},
           ${data.asCreas || null},
+          ${data.psicCreas || null},
           true,
           ${session.userId},
           ${protocoloGerado}
@@ -253,6 +255,7 @@ export async function admitirAction(
         asVaraInfancia: data.asVaraInfancia || null,
         psicVaraInfancia: data.psicVaraInfancia || null,
         asCreas: data.asCreas || null,
+        psicCreas: data.psicCreas || null,
       },
     });
   } catch (error) {
@@ -469,6 +472,7 @@ export async function editarAcolhimentoAction(
     asVaraInfancia: formData.get('asVaraInfancia') ?? '',
     psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
     asCreas: formData.get('asCreas') ?? '',
+    psicCreas: formData.get('psicCreas') ?? '',
   };
 
   const parsed = editarAcolhimentoSchema.safeParse(raw);

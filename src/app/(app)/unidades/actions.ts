@@ -74,6 +74,7 @@ export async function criarUnidadeAction(
     asVaraInfancia: formData.get('asVaraInfancia') ?? '',
     psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
     asCreas: formData.get('asCreas') ?? '',
+    psicCreas: formData.get('psicCreas') ?? '',
   };
 
   const parsed = unidadeSchema.safeParse(raw);
@@ -114,6 +115,7 @@ export async function criarUnidadeAction(
           asVaraInfancia: data.asVaraInfancia || null,
           psicVaraInfancia: data.psicVaraInfancia || null,
           asCreas: data.asCreas || null,
+          psicCreas: data.psicCreas || null,
           ativo: true,
         })
         .returning();
@@ -192,6 +194,7 @@ export async function editarUnidadeAction(
     asVaraInfancia: formData.get('asVaraInfancia') ?? '',
     psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
     asCreas: formData.get('asCreas') ?? '',
+    psicCreas: formData.get('psicCreas') ?? '',
   };
 
   const parsed = editarUnidadeSchema.safeParse(raw);
@@ -241,6 +244,7 @@ export async function editarUnidadeAction(
           asVaraInfancia: data.asVaraInfancia || null,
           psicVaraInfancia: data.psicVaraInfancia || null,
           asCreas: data.asCreas || null,
+          psicCreas: data.psicCreas || null,
           updatedAt: new Date(),
         })
         .where(eq(unidades.id, data.id));

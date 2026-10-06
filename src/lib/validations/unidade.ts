@@ -11,6 +11,7 @@ const tiposAcolhimento = [
   'CENTRO_DIA_IDOSO',
   'JOSE_CALHERANI',
   'RESIDENCIA_INCLUSIVA',
+  'CASA_PASSAGEM',
 ] as const;
 
 // Regex de telefone: aceita (00) 0000-0000 ou (00) 00000-0000
@@ -87,6 +88,11 @@ export const unidadeSchema = z.object({
     .optional()
     .or(z.literal('')),
   asCreas: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+  psicCreas: z
     .string()
     .max(200, 'Máximo de 200 caracteres')
     .optional()

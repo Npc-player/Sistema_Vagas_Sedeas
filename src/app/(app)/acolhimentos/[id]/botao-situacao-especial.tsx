@@ -106,8 +106,8 @@ export function BotaoSituacaoEspecial({
 
   const precisaDetalhe = situacao === 'OUTROS';
   const valido =
-    situacao &&
-    data &&
+    situacao !== '' &&
+    data !== '' &&
     (situacao !== 'OUTROS' || detalhe.trim().length >= 20);
 
   return (
@@ -124,7 +124,7 @@ export function BotaoSituacaoEspecial({
       </Button>
 
       <Dialog open={aberto} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl! max-h-[90vh] overflow-y-auto overflow-x-hidden wrap-break">
           <DialogHeader>
             <DialogTitle>Registrar situação especial</DialogTitle>
             <DialogDescription>

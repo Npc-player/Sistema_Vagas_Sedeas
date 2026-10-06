@@ -232,7 +232,7 @@ export function FormularioEdicaoAcolhimento({
             específico tiver outra equipe.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
             <Label htmlFor="asVaraInfancia">
               Assistente Social Vara da Infância
@@ -264,6 +264,16 @@ export function FormularioEdicaoAcolhimento({
               name="asCreas"
               defaultValue={defaultValues.asCreas ?? ''}
               placeholder="Ex.: Denise"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="psicCreas">Psicólogo(a) CREAS</Label>
+            <Input
+              id="psicCreas"
+              name="psicCreas"
+              defaultValue={defaultValues.psicCreas ?? ''}
+              placeholder="Ex.: Mariana"
             />
           </div>
         </CardContent>

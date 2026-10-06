@@ -110,6 +110,11 @@ export const admitirSchema = z.object({
     .max(200, 'Máximo de 200 caracteres')
     .optional()
     .or(z.literal('')),
+  psicCreas: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type AdmitirInput = z.infer<typeof admitirSchema>;
@@ -308,6 +313,11 @@ export const editarAcolhimentoSchema = z.object({
     .or(z.literal('')),
 
   asCreas: z
+    .string()
+    .max(200, 'Máximo de 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+  psicCreas: z
     .string()
     .max(200, 'Máximo de 200 caracteres')
     .optional()

@@ -21,6 +21,7 @@ export const acolhimentos = pgTable('acolhimentos', {
   asVaraInfancia: text('as_vara_infancia'),
   psicVaraInfancia: text('psic_vara_infancia'),
   asCreas: text('as_creas'),
+  psicCreas: text('psic_creas'),
 
   // Situação especial (evasão ou outros)
   situacaoEspecial: situacaoEspecialAcolhimentoEnum('situacao_especial'),

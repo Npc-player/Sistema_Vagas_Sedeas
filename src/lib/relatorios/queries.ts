@@ -17,12 +17,12 @@ function allRows<T>(result: unknown): T[] {
 }
 
 export interface Periodo {
-  inicio: string;
-  fim: string;
+  inicio: string; // YYYY-MM-DD
+  fim: string;    // YYYY-MM-DD
 }
 
 // =====================================================
-// Central de Regulação
+// Central de Regulação — dados por unidade
 // =====================================================
 export interface LinhaCentralRegulacao {
   unidadeId: string;
@@ -53,14 +53,12 @@ export async function getCentralRegulacao(
       u.tipo::text AS "unidadeTipo",
       u.capacidade_total AS "metaConveniada",
 
-      -- ENTRADAS: acolhimentos iniciados no período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
           AND a.data_acolhimento BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
       ), 0) AS entradas,
 
-      -- SAÍDAS: desacolhimentos formais no período (não conta situações especiais)
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
@@ -68,7 +66,6 @@ export async function getCentralRegulacao(
           AND a.situacao_especial IS NULL
       ), 0) AS saidas,
 
-      -- EVASÕES/OUTROS: acolhimentos com situação especial registrada no período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
@@ -76,7 +73,6 @@ export async function getCentralRegulacao(
           AND a.situacao_especial_em BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
       ), 0) AS "evasoesOutros",
 
-      -- ACOLHIDOS: ativos no fim do período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
@@ -84,7 +80,6 @@ export async function getCentralRegulacao(
           AND (a.data_desacolhimento IS NULL OR a.data_desacolhimento > ${periodo.fim}::date)
       ), 0) AS acolhidos,
 
-      -- PERMANECENTES: ativos que já estavam antes do início do período
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
@@ -119,6 +114,9 @@ export async function getCentralRegulacao(
   }));
 }
 
+// =====================================================
+// Totais consolidados
+// =====================================================
 export interface TotaisCentralRegulacao {
   metaConveniada: number;
   entradas: number;
@@ -174,19 +172,29 @@ export function calcularPeriodo(
   if (tipo === 'ANUAL') {
     const inicio = new Date(base.getFullYear(), 0, 1);
     const fim = new Date(base.getFullYear(), 11, 31);
-    return { inicio: formatarData(inicio), fim: formatarData(fim) };
+    return {
+      inicio: formatarData(inicio),
+      fim: formatarData(fim),
+    };
   }
 
   if (tipo === 'TRIMESTRAL') {
     const trimestre = Math.floor(base.getMonth() / 3);
     const inicio = new Date(base.getFullYear(), trimestre * 3, 1);
     const fim = new Date(base.getFullYear(), trimestre * 3 + 3, 0);
-    return { inicio: formatarData(inicio), fim: formatarData(fim) };
+    return {
+      inicio: formatarData(inicio),
+      fim: formatarData(fim),
+    };
   }
 
+  // MENSAL
   const inicio = new Date(base.getFullYear(), base.getMonth(), 1);
   const fim = new Date(base.getFullYear(), base.getMonth() + 1, 0);
-  return { inicio: formatarData(inicio), fim: formatarData(fim) };
+  return {
+    inicio: formatarData(inicio),
+    fim: formatarData(fim),
+  };
 }
 
 function formatarData(d: Date): string {
@@ -197,12 +205,12 @@ function formatarData(d: Date): string {
 }
 
 // =====================================================
-// Fluxo Detalhado
+// Fluxo Mensal Detalhado — lista nominal
 // =====================================================
 export interface LinhaFluxoDetalhado {
   acolhimentoId: string;
   protocolo: string;
-  grupoFamiliar: string | null;
+  grupoIrmaos: string | null; // número da MP comum (irmãos)
 
   acolhidoId: string;
   nomeCompleto: string;
@@ -219,7 +227,6 @@ export interface LinhaFluxoDetalhado {
   cpf: string | null;
   rg: string | null;
 
-  numeroProcesso: string | null;
   numeroMedidaProtetiva: string | null;
   numeroGuiaAcolhimento: string | null;
   territorio: string | null;
@@ -231,6 +238,7 @@ export interface LinhaFluxoDetalhado {
   asVaraInfancia: string | null;
   psicVaraInfancia: string | null;
   asCreas: string | null;
+  psicCreas: string | null;
 
   situacaoEspecial: string | null;
   situacaoOutrosDetalhe: string | null;
@@ -252,7 +260,7 @@ export async function getFluxoDetalhado(
     SELECT
       ac.id AS "acolhimentoId",
       ac.protocolo,
-      a.grupo_familiar AS "grupoFamiliar",
+      ac.numero_medida_protetiva AS "grupoIrmaos",
 
       a.id AS "acolhidoId",
       a.nome_completo AS "nomeCompleto",
@@ -266,7 +274,6 @@ export async function getFluxoDetalhado(
       ac.motivo_acolhimento AS motivo,
       ac.regime::text AS regime,
 
-      ac.numero_processo AS "numeroProcesso",
       ac.numero_medida_protetiva AS "numeroMedidaProtetiva",
       ac.numero_guia_acolhimento AS "numeroGuiaAcolhimento",
       ac.territorio,
@@ -275,9 +282,10 @@ export async function getFluxoDetalhado(
       u.nome AS "unidadeNome",
       u.tipo::text AS "unidadeTipo",
 
-      COALESCE(ac.as_vara_infancia, u.as_vara_infancia) AS "asVaraInfancia",
-      COALESCE(ac.psic_vara_infancia, u.psic_vara_infancia) AS "psicVaraInfancia",
-      COALESCE(ac.as_creas, u.as_creas) AS "asCreas",
+      ac.as_vara_infancia AS "asVaraInfancia",
+      ac.psic_vara_infancia AS "psicVaraInfancia",
+      ac.as_creas AS "asCreas",
+      ac.psic_creas AS "psicCreas",
 
       ac.situacao_especial::text AS "situacaoEspecial",
       ac.situacao_outros_detalhe AS "situacaoOutrosDetalhe",
@@ -294,7 +302,7 @@ export async function getFluxoDetalhado(
     )
     ${filtroUnidade}
     ORDER BY
-      a.grupo_familiar NULLS LAST,
+      ac.numero_medida_protetiva NULLS LAST,
       a.nome_completo ASC
   `);
 
@@ -324,7 +332,10 @@ export async function getFluxoDetalhado(
           docResult
         )[0];
         if (doc) {
-          documentos.set(acolhidoId, { cpf: doc.cpf, rg: doc.rg });
+          documentos.set(acolhidoId, {
+            cpf: doc.cpf,
+            rg: doc.rg,
+          });
         }
       } catch (error) {
         console.error('[getFluxoDetalhado] erro ao descriptografar:', error);

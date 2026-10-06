@@ -2,7 +2,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import {
@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InputTelefone } from '@/components/ui/input-telefone';
+import { InputCnpj } from '@/components/ui/input-cnpj';
 import {
   Select,
   SelectContent,
@@ -131,17 +133,26 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
             )}
           </div>
 
-          <div>
-            <Label htmlFor="cnpj">CNPJ (opcional)</Label>
-            <Input
-              id="cnpj"
-              placeholder="00.000.000/0000-00"
-              {...register('cnpj')}
-            />
-            {errors.cnpj && (
-              <p className="text-sm text-red-600 mt-1">{errors.cnpj.message}</p>
+                    <Controller
+            name="cnpj"
+            control={control}
+            render={({ field, fieldState }) => (
+              <div>
+                <Label htmlFor="cnpj">CNPJ (opcional)</Label>
+                <InputCnpj
+                  id="cnpj"
+                  placeholder="00.000.000/0000-00"
+                  value={field.value ?? ''}
+                  onValueChange={field.onChange}
+                />
+                {fieldState.error && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {fieldState.error.message}
+                  </p>
+                )}
+              </div>
             )}
-          </div>
+          />
 
           <div className="md:col-span-2">
             <Label htmlFor="capacidadeTotal">Capacidade total de vagas *</Label>
@@ -254,9 +265,9 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="telefoneInstitucional">Telefone *</Label>
-            <Input
+            <InputTelefone
               id="telefoneInstitucional"
-              placeholder="(00) 0000-0000"
+              placeholder="(00) 00000-0000"
               {...register('telefoneInstitucional')}
             />
             {errors.telefoneInstitucional && (
@@ -300,7 +311,7 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
 
           <div>
             <Label htmlFor="responsavelTelefone">Telefone *</Label>
-            <Input
+            <InputTelefone
               id="responsavelTelefone"
               placeholder="(00) 00000-0000"
               {...register('responsavelTelefone')}
@@ -337,7 +348,7 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
             relatórios mensais de fluxo de acolhimento.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
             <Label htmlFor="asVaraInfancia">
               Assistente Social Vara da Infância
@@ -380,6 +391,20 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
             {errors.asCreas && (
               <p className="text-sm text-red-600 mt-1">
                 {errors.asCreas.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="psicCreas">Psicólogo(a) CREAS</Label>
+            <Input
+              id="psicCreas"
+              placeholder="Ex.: Mariana"
+              {...register('psicCreas')}
+            />
+            {errors.psicCreas && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.psicCreas.message}
               </p>
             )}
           </div>

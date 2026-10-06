@@ -85,6 +85,7 @@ export function FormularioAdmissao({
   const [asVaraInfancia, setAsVaraInfancia] = useState<string>('');
   const [psicVaraInfancia, setPsicVaraInfancia] = useState<string>('');
   const [asCreas, setAsCreas] = useState<string>('');
+  const [psicCreas, setPsicCreas] = useState<string>('');
 
   const acolhidoSelecionado = useMemo(
     () => acolhidos.find((a) => a.id === acolhidoId),
@@ -119,6 +120,7 @@ export function FormularioAdmissao({
       setAsVaraInfancia(u.asVaraInfancia ?? '');
       setPsicVaraInfancia(u.psicVaraInfancia ?? '');
       setAsCreas(u.asCreas ?? '');
+      setPsicCreas(u.psicCreas ?? '');
     }
   }
 
@@ -469,7 +471,7 @@ export function FormularioAdmissao({
               caso específico tiver outra equipe de referência.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div>
               <Label htmlFor="asVaraInfancia">
                 Assistente Social Vara da Infância
@@ -504,6 +506,17 @@ export function FormularioAdmissao({
                 placeholder="Ex.: Denise"
                 value={asCreas}
                 onChange={(e) => setAsCreas(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="psicCreas">Psicólogo(a) CREAS</Label>
+              <Input
+                id="psicCreas"
+                name="psicCreas"
+                placeholder="Ex.: Mariana"
+                value={psicCreas}
+                onChange={(e) => setPsicCreas(e.target.value)}
               />
             </div>
           </CardContent>

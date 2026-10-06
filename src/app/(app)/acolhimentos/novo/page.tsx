@@ -22,6 +22,7 @@ export interface UnidadeOption {
   asVaraInfancia: string | null;
   psicVaraInfancia: string | null;
   asCreas: string | null;
+  psicCreas: string | null;
   vagas: VagaOption[];
 }
 
@@ -62,6 +63,7 @@ export default async function NovaAdmissaoPage() {
       u.as_vara_infancia AS unidade_as_vara,
       u.psic_vara_infancia AS unidade_psic_vara,
       u.as_creas AS unidade_as_creas,
+      u.psic_creas AS unidade_psic_creas,
       v.id AS vaga_id,
       v.numero_leito AS vaga_numero
     FROM unidades u
@@ -81,6 +83,7 @@ export default async function NovaAdmissaoPage() {
     unidade_as_vara: string | null;
     unidade_psic_vara: string | null;
     unidade_as_creas: string | null;
+    unidade_psic_creas: string | null;
     vaga_id: string | null;
     vaga_numero: number | null;
   }>;
@@ -99,6 +102,7 @@ export default async function NovaAdmissaoPage() {
         asVaraInfancia: l.unidade_as_vara,
         psicVaraInfancia: l.unidade_psic_vara,
         asCreas: l.unidade_as_creas,
+        psicCreas: l.unidade_psic_creas,
         vagas: [],
       };
       mapa.set(l.unidade_id, unidade);

@@ -519,7 +519,7 @@ function gerarPDFFluxo(dados: DadosPDFFluxo): Promise<Buffer> {
       layout = desenharLayoutLandscape(doc);
       let y = layout.contentTop;
 
-      // Cabeçalho
+      // Cabeçalho institucional
       doc
         .fillColor('#0F172A')
         .fontSize(8)
@@ -558,83 +558,135 @@ function gerarPDFFluxo(dados: DadosPDFFluxo): Promise<Buffer> {
 
       // Colunas
       const cols = [
-        { label: 'GRUPO', x: 0, w: 38, key: 'grupo' },
-        { label: 'NOME / FILIAÇÃO', x: 38, w: 130, key: 'nome' },
-        { label: 'NASC.', x: 168, w: 48, key: 'nasc' },
-        { label: 'ACOLH.', x: 216, w: 48, key: 'acolh' },
-        { label: 'DOC.', x: 264, w: 65, key: 'doc' },
-        { label: 'PROCESSO / GUIA', x: 329, w: 85, key: 'proc' },
-        { label: 'TERRITÓRIO', x: 414, w: 70, key: 'terr' },
-        { label: 'EQUIPE TÉCNICA', x: 484, w: 95, key: 'equipe' },
-        { label: 'MOTIVO / REGIME', x: 579, w: 75, key: 'motivo' },
-        { label: 'STATUS', x: 654, w: 127, key: 'status' },
+        { label: 'Nº', x: 0, w: 22, key: 'n' },
+        { label: 'GRUPO DE\nIRMÃOS', x: 22, w: 55, key: 'grupo' },
+        { label: 'NOME / FILIAÇÃO', x: 77, w: 135, key: 'nome' },
+        { label: 'NASCIMENTO', x: 212, w: 55, key: 'nasc' },
+        { label: 'ACOLHIDO\nEM', x: 267, w: 50, key: 'acolh' },
+        { label: 'CPF', x: 317, w: 65, key: 'cpf' },
+        { label: 'MP / GUIA DE\nACOLHIMENTO', x: 382, w: 90, key: 'mp' },
+        { label: 'VARA DA\nINFÂNCIA', x: 472, w: 80, key: 'vara' },
+        { label: 'CREAS', x: 552, w: 75, key: 'creas' },
+        { label: 'MOTIVO /\nREGIME', x: 627, w: 75, key: 'motivo' },
+        { label: 'TERRITÓRIO', x: 702, w: 89, key: 'terr' },
       ] as const;
 
+      // Cabeçalho com 2 linhas (mesclado em EQUIPE TÉCNICA)
       const desenharHeader = () => {
-        doc.fillColor('#0F766E').rect(MX, y, CW, 16).fill();
-        doc.fillColor('#FFFFFF').fontSize(6.5).font('Helvetica-Bold');
+        const hRow1 = 11; // linha "EQUIPE TÉCNICA"
+        const hRow2 = 18; // demais rótulos
+        const xEquipeInicio = MX + 472;
+        const larguraEquipe = 80 + 75; // VARA + CREAS
+
+        // Faixa 1
+        doc
+          .fillColor('#0F766E')
+          .rect(MX, y, CW, hRow1 + hRow2)
+          .fill();
+
+        // Texto "EQUIPE TÉCNICA" centralizado sobre as 2 colunas
+        doc.fillColor('#FFFFFF').fontSize(6).font('Helvetica-Bold');
+        doc.text('EQUIPE TÉCNICA', xEquipeInicio, y + 3, {
+          width: larguraEquipe,
+          align: 'center',
+          lineBreak: false,
+        });
+
+        // Linha separadora horizontal sob EQUIPE TÉCNICA
+        doc
+          .strokeColor('#0F766E')
+          .lineWidth(0.3)
+          .moveTo(xEquipeInicio, y + hRow1)
+          .lineTo(xEquipeInicio + larguraEquipe, y + hRow1)
+          .stroke();
+
+        // Rótulos da faixa 2
         for (const c of cols) {
-          doc.text(c.label, MX + c.x + 3, y + 5, {
-            width: c.w - 6,
-            lineBreak: false,
+          // Pula o cabeçalho "EQUIPE TÉCNICA" (VARA e CREAS recebem rótulo na faixa 2)
+          const textoLabel = c.label.replace(/\n/g, ' ');
+          const altura = doc.heightOfString(textoLabel, {
+            width: c.w - 4,
+            align: 'center',
+          });
+          const yTexto = y + hRow1 + Math.max(2, (hRow2 - altura) / 2);
+          doc.text(textoLabel, MX + c.x + 2, yTexto, {
+            width: c.w - 4,
+            align: 'center',
+            lineBreak: true,
           });
         }
-        y += 16;
+
+        y += hRow1 + hRow2;
       };
 
       desenharHeader();
-      doc.font('Helvetica').fontSize(6.5).fillColor('#0F172A');
+      doc.font('Helvetica').fontSize(6).fillColor('#0F172A');
+
+      let contador = 0;
 
       for (const l of dados.linhas) {
-        const alturaLinha = 22;
+        const alturaLinha = 32;
         if (y + alturaLinha > layout.contentBottom) {
           y = novaPagina();
           desenharHeader();
-          doc.font('Helvetica').fontSize(6.5).fillColor('#0F172A');
+          doc.font('Helvetica').fontSize(6).fillColor('#0F172A');
         }
 
-        if (l.grupoFamiliar) {
-          doc.fillColor('#F0FDFA').rect(MX, y, CW, alturaLinha).fill();
+        // Fundo destacado para irmãos (todas as linhas do grupo)
+        if (l.grupoIrmaos) {
+          doc
+            .fillColor('#F0FDFA')
+            .rect(MX, y, CW, alturaLinha)
+            .fill();
         }
+
+        contador++;
+
+        // Prefixo "A.S.:" e "Psic.:" na equipe
+        const varaTexto = l.asVaraInfancia
+          ? `A.S.: ${l.asVaraInfancia}${l.psicVaraInfancia ? `\nPsic.: ${l.psicVaraInfancia}` : ''}`
+          : l.psicVaraInfancia
+            ? `Psic.: ${l.psicVaraInfancia}`
+            : '—';
+
+        const creasTexto =
+          l.asCreas || l.psicCreas
+            ? [
+                l.asCreas ? `A.S.: ${l.asCreas}` : '',
+                l.psicCreas ? `Psic.: ${l.psicCreas}` : '',
+              ]
+                .filter(Boolean)
+                .join('\n')
+            : '—';
 
         const valores: Record<string, string> = {
-          grupo: l.grupoFamiliar ?? '—',
+          n: String(contador),
+          grupo: l.grupoIrmaos ?? '—',
           nome:
             l.nomeCompleto + (l.nomeMae ? `\nMãe: ${l.nomeMae}` : ''),
           nasc: `${formatarDataBR(l.dataNascimento)}\n${l.idade} anos`,
           acolh: formatarDataBR(l.dataAcolhimento),
-          doc:
-            [l.cpf ? `CPF: ${l.cpf}` : '', l.rg ? `RG: ${l.rg}` : '']
-              .filter(Boolean)
-              .join('\n') || '—',
-          proc:
+          cpf: l.cpf ?? '—',
+          mp:
             [
-              l.numeroProcesso ? `Proc: ${l.numeroProcesso}` : '',
               l.numeroMedidaProtetiva ? `MP: ${l.numeroMedidaProtetiva}` : '',
-              l.numeroGuiaAcolhimento ? `Guia: ${l.numeroGuiaAcolhimento}` : '',
+              l.numeroGuiaAcolhimento
+                ? `Guia: ${l.numeroGuiaAcolhimento}`
+                : '',
             ]
               .filter(Boolean)
               .join('\n') || '—',
-          terr: l.territorio ?? '—',
-          equipe:
-            [
-              l.asVaraInfancia ? `AS Vara: ${l.asVaraInfancia}` : '',
-              l.psicVaraInfancia ? `Psic: ${l.psicVaraInfancia}` : '',
-              l.asCreas ? `AS CREAS: ${l.asCreas}` : '',
-            ]
-              .filter(Boolean)
-              .join('\n') || '—',
+          vara: varaTexto,
+          creas: creasTexto,
           motivo: `${LABEL_MOTIVO[l.motivo] ?? l.motivo}\n${LABEL_REGIME[l.regime] ?? l.regime}`,
-          status: l.ativo
-            ? 'ATIVO'
-            : `${l.situacaoEspecial ? l.situacaoEspecial + ' — ' : ''}ENCERRADO\n${formatarDataBR(l.dataDesacolhimento ?? '')}`,
+          terr: l.territorio ?? '—',
         };
 
         for (const c of cols) {
           doc.fillColor('#0F172A');
-          doc.text(valores[c.key] ?? '', MX + c.x + 3, y + 3, {
-            width: c.w - 6,
-            height: alturaLinha - 4,
+          doc.text(valores[c.key] ?? '', MX + c.x + 2, y + 3, {
+            width: c.w - 4,
+            align: c.key === 'n' || c.key === 'grupo' ? 'center' : 'left',
             lineBreak: true,
           });
         }

@@ -270,7 +270,8 @@ export default async function DetalheUnidadePage({
           {/* Equipe técnica de referência */}
           {(unidade.as_vara_infancia ||
             unidade.psic_vara_infancia ||
-            unidade.as_creas) && (
+            unidade.as_creas ||
+            unidade.psic_creas) && (
             <Card className="border-slate-200">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -301,6 +302,14 @@ export default async function DetalheUnidadePage({
                   </p>
                   <p className="text-slate-900 mt-0.5">
                     {unidade.as_creas ?? '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Psicólogo(a) — CREAS
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {unidade.psic_creas ?? '—'}
                   </p>
                 </div>
               </CardContent>

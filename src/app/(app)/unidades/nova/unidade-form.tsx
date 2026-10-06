@@ -11,8 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import Link from 'next/link';
+import { InputTelefone } from '@/components/ui/input-telefone';
+import { InputCnpj } from '@/components/ui/input-cnpj';
 import {
   Select,
   SelectContent,
@@ -36,6 +38,7 @@ const TIPOS = [
   { value: 'CENTRO_DIA_IDOSO', label: 'Centro Dia do Idoso' },
   { value: 'JOSE_CALHERANI', label: 'José Calherani' },
   { value: 'RESIDENCIA_INCLUSIVA', label: 'Residência Inclusiva (R.I.)' },
+  { value: 'CASA_PASSAGEM', label: 'Casa de Passagem (acolhimento provisório)' },
 ] as const;
 
 export function UnidadeForm() {
@@ -124,17 +127,26 @@ export function UnidadeForm() {
             )}
           </div>
 
-          <div>
-            <Label htmlFor="cnpj">CNPJ (opcional)</Label>
-            <Input
-              id="cnpj"
-              placeholder="00.000.000/0000-00"
-              {...register('cnpj')}
-            />
-            {errors.cnpj && (
-              <p className="text-sm text-red-600 mt-1">{errors.cnpj.message}</p>
+                    <Controller
+            name="cnpj"
+            control={control}
+            render={({ field, fieldState }) => (
+              <div>
+                <Label htmlFor="cnpj">CNPJ (opcional)</Label>
+                <InputCnpj
+                  id="cnpj"
+                  placeholder="00.000.000/0000-00"
+                  value={field.value ?? ''}
+                  onValueChange={field.onChange}
+                />
+                {fieldState.error && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {fieldState.error.message}
+                  </p>
+                )}
+              </div>
             )}
-          </div>
+          />
 
           <div>
             <Label htmlFor="capacidadeTotal">Capacidade total de vagas *</Label>
@@ -244,9 +256,9 @@ export function UnidadeForm() {
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="telefoneInstitucional">Telefone *</Label>
-            <Input
+            <InputTelefone
               id="telefoneInstitucional"
-              placeholder="(00) 0000-0000"
+              placeholder="(00) 00000-0000"
               {...register('telefoneInstitucional')}
             />
             {errors.telefoneInstitucional && (
@@ -290,7 +302,7 @@ export function UnidadeForm() {
 
           <div>
             <Label htmlFor="responsavelTelefone">Telefone *</Label>
-            <Input
+            <InputTelefone
               id="responsavelTelefone"
               placeholder="(00) 00000-0000"
               {...register('responsavelTelefone')}
@@ -327,9 +339,11 @@ export function UnidadeForm() {
             relatórios mensais de fluxo de acolhimento.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
-            <Label htmlFor="asVaraInfancia">Assistente Social - Vara da Infância</Label>
+            <Label htmlFor="asVaraInfancia">
+              Assistente Social Vara da Infância
+            </Label>
             <Input
               id="asVaraInfancia"
               placeholder="Ex.: Patrícia"
@@ -343,7 +357,9 @@ export function UnidadeForm() {
           </div>
 
           <div>
-            <Label htmlFor="psicVaraInfancia">Psicólogo(a) Vara da Infância</Label>
+            <Label htmlFor="psicVaraInfancia">
+              Psicólogo(a) Vara da Infância
+            </Label>
             <Input
               id="psicVaraInfancia"
               placeholder="Ex.: Tainá"
@@ -357,7 +373,7 @@ export function UnidadeForm() {
           </div>
 
           <div>
-            <Label htmlFor="asCreas">Assistente Social - CREAS</Label>
+            <Label htmlFor="asCreas">Assistente Social CREAS</Label>
             <Input
               id="asCreas"
               placeholder="Ex.: Denise"
@@ -366,6 +382,20 @@ export function UnidadeForm() {
             {errors.asCreas && (
               <p className="text-sm text-red-600 mt-1">
                 {errors.asCreas.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="psicCreas">Psicólogo(a) CREAS</Label>
+            <Input
+              id="psicCreas"
+              placeholder="Ex.: Mariana"
+              {...register('psicCreas')}
+            />
+            {errors.psicCreas && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.psicCreas.message}
               </p>
             )}
           </div>

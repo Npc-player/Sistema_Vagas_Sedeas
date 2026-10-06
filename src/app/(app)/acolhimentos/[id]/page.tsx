@@ -77,6 +77,7 @@ interface AcolhimentoDetalhe {
   as_vara_infancia: string | null;
   psic_vara_infancia: string | null;
   as_creas: string | null;
+  psic_creas: string | null;
   situacao_especial: string | null;
   situacao_outros_detalhe: string | null;
   situacao_especial_em: string | null;
@@ -124,6 +125,7 @@ export default async function DetalheAcolhimentoPage({
       ac.as_vara_infancia,
       ac.psic_vara_infancia,
       ac.as_creas,
+      ac.psic_creas,
       ac.situacao_especial::text AS situacao_especial,
       ac.situacao_outros_detalhe,
       ac.situacao_especial_em,
@@ -154,7 +156,8 @@ export default async function DetalheAcolhimentoPage({
   const temEquipeTecnica =
     acolhimento.as_vara_infancia ||
     acolhimento.psic_vara_infancia ||
-    acolhimento.as_creas;
+    acolhimento.as_creas ||
+    acolhimento.psic_creas;
 
   const temSituacaoEspecial = !!acolhimento.situacao_especial;
 
@@ -455,6 +458,16 @@ export default async function DetalheAcolhimentoPage({
                   </p>
                   <p className="text-slate-900 mt-0.5">
                     {acolhimento.as_creas}
+                  </p>
+                </div>
+              )}
+              {acolhimento.psic_creas && (
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    Psicólogo(a) — CREAS
+                  </p>
+                  <p className="text-slate-900 mt-0.5">
+                    {acolhimento.psic_creas}
                   </p>
                 </div>
               )}
