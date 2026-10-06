@@ -174,24 +174,36 @@ export async function getFluxo12Meses(
       SELECT date_trunc('month', CURRENT_DATE - INTERVAL '11 months')
              + (n || ' months')::interval AS mes
       FROM generate_series(0, 11) AS n
+    ),
+    entradas AS (
+      SELECT
+        date_trunc('month', a.data_acolhimento) AS mes,
+        COUNT(*)::int AS total
+      FROM acolhimentos a
+      INNER JOIN unidades u ON u.id = a.unidade_id
+      WHERE a.data_acolhimento >= date_trunc('month', CURRENT_DATE - INTERVAL '11 months')
+        AND ${whereUnidade}
+      GROUP BY date_trunc('month', a.data_acolhimento)
+    ),
+    saidas AS (
+      SELECT
+        date_trunc('month', a.data_desacolhimento) AS mes,
+        COUNT(*)::int AS total
+      FROM acolhimentos a
+      INNER JOIN unidades u ON u.id = a.unidade_id
+      WHERE a.data_desacolhimento IS NOT NULL
+        AND a.data_desacolhimento >= date_trunc('month', CURRENT_DATE - INTERVAL '11 months')
+        AND ${whereUnidade}
+      GROUP BY date_trunc('month', a.data_desacolhimento)
     )
     SELECT
       to_char(m.mes, 'YYYY-MM') AS mes,
       to_char(m.mes, 'TMMon/YY') AS label,
-      COALESCE((
-        SELECT COUNT(*)::int FROM acolhimentos a
-        INNER JOIN unidades u ON u.id = a.unidade_id
-        WHERE date_trunc('month', a.data_acolhimento) = m.mes
-          AND ${whereUnidade}
-      ), 0) AS entradas,
-      COALESCE((
-        SELECT COUNT(*)::int FROM acolhimentos a
-        INNER JOIN unidades u ON u.id = a.unidade_id
-        WHERE a.data_desacolhimento IS NOT NULL
-          AND date_trunc('month', a.data_desacolhimento) = m.mes
-          AND ${whereUnidade}
-      ), 0) AS saidas
+      COALESCE(e.total, 0) AS entradas,
+      COALESCE(s.total, 0) AS saidas
     FROM meses m
+    LEFT JOIN entradas e ON e.mes = m.mes
+    LEFT JOIN saidas s ON s.mes = m.mes
     ORDER BY m.mes
   `);
 
