@@ -30,8 +30,9 @@ const LABEL_TIPO_CURTO: Record<string, string> = {
   ILPI: 'ILPI',
   SAICA: 'SAICA',
   CENTRO_DIA_IDOSO: 'Centro Dia',
-  SAI: 'SAI — Serviço de Acolhimento Institucional',
+  SAI: 'SAI',
   RESIDENCIA_INCLUSIVA: 'R.I.',
+  CASA_PASSAGEM: 'Casa de Passagem',
 };
 
 // Labels completos — exibidos no dropdown
@@ -41,6 +42,7 @@ const LABEL_TIPO_COMPLETO: Record<string, string> = {
   CENTRO_DIA_IDOSO: 'Centro Dia do Idoso',
   SAI: 'SAI — Serviço de Acolhimento Institucional',
   RESIDENCIA_INCLUSIVA: 'R.I. — Residência Inclusiva',
+  CASA_PASSAGEM: 'Casa de Passagem (acolhimento provisório)',
 };
 
 const TIPOS = Object.keys(LABEL_TIPO_COMPLETO);
