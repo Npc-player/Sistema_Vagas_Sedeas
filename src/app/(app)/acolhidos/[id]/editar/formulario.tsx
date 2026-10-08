@@ -25,7 +25,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { ShieldAlert } from 'lucide-react';
+import { Link, ShieldAlert } from 'lucide-react';
 
 const initialState: AcolhidoActionState = {};
 
@@ -224,9 +224,11 @@ export function FormularioEdicao({ defaultValues }: FormularioEdicaoProps) {
       </Card>
 
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" disabled={isPending}>
-          Cancelar
-        </Button>
+        <Link href={`/acolhidos/${defaultValues.id}`}>
+          <Button type="button" variant="outline" disabled={isPending}>
+            Cancelar
+          </Button>
+        </Link>
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Salvando...' : 'Salvar alterações'}
         </Button>

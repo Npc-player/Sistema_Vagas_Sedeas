@@ -16,7 +16,7 @@ import {
   type AcolhimentoActionState,
 } from '../actions';
 import type { AcolhidoOption, UnidadeOption } from './page';
-
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -525,9 +525,11 @@ export function FormularioAdmissao({
 
       {/* Botões */}
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" disabled={isPending}>
-          Cancelar
-        </Button>
+        <Link href="/acolhimentos">
+          <Button type="button" variant="outline" disabled={isPending}>
+            Cancelar
+          </Button>
+        </Link>
         <Button
           type="submit"
           disabled={

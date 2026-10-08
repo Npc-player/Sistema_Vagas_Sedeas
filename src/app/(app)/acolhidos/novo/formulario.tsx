@@ -25,7 +25,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { ShieldAlert } from 'lucide-react';
+import { Link, ShieldAlert } from 'lucide-react';
 
 const initialState: AcolhidoActionState = {};
 
@@ -254,9 +254,11 @@ export function FormularioAcolhido() {
       </Card>
 
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" disabled={isPending}>
-          Cancelar
-        </Button>
+        <Link href="/acolhidos">
+          <Button type="button" variant="outline" disabled={isPending}>
+            Cancelar
+          </Button>
+        </Link>
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Salvando...' : 'Cadastrar pessoa'}
         </Button>
