@@ -5,8 +5,10 @@ import { getSession, can } from '@/lib/rbac';
 import {
   listarEmAcolhimento,
   listarSemAcolhimento,
+  type FiltrosAcolhidos,
 } from '@/lib/acolhidos/queries';
 import { AbasAcolhidos } from './abas';
+import { FiltrosAcolhidos as FiltrosUI } from './filtros';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { UserPlus, Users, ChevronRight, Home } from 'lucide-react';
+import { UserPlus, Users, ChevronRight, Home, Search } from 'lucide-react';
 import { LABEL_TIPO_SERVICO_CURTO } from '@/lib/constants/tipos';
 
 const LABEL_REGIME: Record<string, string> = {
@@ -32,7 +34,12 @@ const LABEL_REGIME: Record<string, string> = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ aba?: string }>;
+  searchParams: Promise<{
+    aba?: string;
+    nome?: string;
+    cpf?: string;
+    medidaProtetiva?: string;
+  }>;
 }
 
 export default async function AcolhidosPage({ searchParams }: PageProps) {
@@ -45,9 +52,21 @@ export default async function AcolhidosPage({ searchParams }: PageProps) {
   const abaAtual =
     params.aba === 'sem-acolhimento' ? 'sem-acolhimento' : 'em-acolhimento';
 
-  // Carrega sequencialmente (pool de 1 conexão)
-  const emAcolhimento = await listarEmAcolhimento();
-  const semAcolhimento = await listarSemAcolhimento();
+  const filtros: FiltrosAcolhidos = {
+    nome: params.nome,
+    cpf: params.cpf,
+    medidaProtetiva: params.medidaProtetiva,
+  };
+
+  // Carrega as duas listas sempre (para contadores das abas)
+  const emAcolhimento = await listarEmAcolhimento(filtros);
+  const semAcolhimento = await listarSemAcolhimento(filtros);
+
+  const temFiltroAtivo = !!(
+    params.nome ||
+    params.cpf ||
+    params.medidaProtetiva
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -73,6 +92,9 @@ export default async function AcolhidosPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
+      {/* Filtros */}
+      <FiltrosUI />
+
       {/* Abas */}
       <AbasAcolhidos
         abaAtual={abaAtual}
@@ -87,15 +109,31 @@ export default async function AcolhidosPage({ searchParams }: PageProps) {
             <CardTitle className="text-base flex items-center gap-2">
               <Home className="w-5 h-5 text-teal-700" />
               Pessoas em acolhimento
+              {temFiltroAtivo && (
+                <span className="text-xs text-slate-500 font-normal">
+                  (filtrado)
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {emAcolhimento.length === 0 ? (
               <div className="text-center py-12">
-                <Home className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">
-                  Nenhuma pessoa em acolhimento no momento.
-                </p>
+                {temFiltroAtivo ? (
+                  <>
+                    <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Nenhum resultado encontrado com os filtros aplicados.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Home className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Nenhuma pessoa em acolhimento no momento.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <Table>
@@ -179,15 +217,31 @@ export default async function AcolhidosPage({ searchParams }: PageProps) {
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="w-5 h-5 text-teal-700" />
               Pessoas sem acolhimento ativo
+              {temFiltroAtivo && (
+                <span className="text-xs text-slate-500 font-normal">
+                  (filtrado)
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {semAcolhimento.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">
-                  Todas as pessoas cadastradas estão em acolhimento.
-                </p>
+                {temFiltroAtivo ? (
+                  <>
+                    <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Nenhum resultado encontrado com os filtros aplicados.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Todas as pessoas cadastradas estão em acolhimento.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <Table>
@@ -197,7 +251,9 @@ export default async function AcolhidosPage({ searchParams }: PageProps) {
                     <TableHead className="text-center">Idade</TableHead>
                     <TableHead>Mãe</TableHead>
                     <TableHead>Grupo familiar</TableHead>
-                    <TableHead className="text-center">Acolh. anteriores</TableHead>
+                    <TableHead className="text-center">
+                      Acolh. anteriores
+                    </TableHead>
                     <TableHead>Cadastro</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
