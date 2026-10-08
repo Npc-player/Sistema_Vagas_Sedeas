@@ -14,6 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Filter, X } from 'lucide-react';
+import {
+  tiposAcolhimento,
+  LABEL_TIPO_ACOLHIMENTO,
+} from '@/lib/validations/unidade';
 
 export interface UnidadeOption {
   id: string;
@@ -24,28 +28,6 @@ export interface UnidadeOption {
 interface FiltrosDashboardProps {
   unidades: UnidadeOption[];
 }
-
-// Labels curtos — exibidos no trigger
-const LABEL_TIPO_CURTO: Record<string, string> = {
-  ILPI: 'ILPI',
-  SAICA: 'SAICA',
-  CENTRO_DIA_IDOSO: 'Centro Dia',
-  SAI: 'SAI',
-  RESIDENCIA_INCLUSIVA: 'R.I.',
-  CASA_PASSAGEM: 'Casa de Passagem',
-};
-
-// Labels completos — exibidos no dropdown
-const LABEL_TIPO_COMPLETO: Record<string, string> = {
-  ILPI: 'ILPI — Instituição de Longa Permanência para Idosos',
-  SAICA: 'SAICA — Acolhimento para Crianças e Adolescentes',
-  CENTRO_DIA_IDOSO: 'Centro Dia do Idoso',
-  SAI: 'SAI — Serviço de Acolhimento Institucional',
-  RESIDENCIA_INCLUSIVA: 'R.I. — Residência Inclusiva',
-  CASA_PASSAGEM: 'Casa de Passagem (acolhimento provisório)',
-};
-
-const TIPOS = Object.keys(LABEL_TIPO_COMPLETO);
 
 export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
   const router = useRouter();
@@ -89,7 +71,8 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
 
   const descricaoFiltro = (() => {
     const partes: string[] = [];
-    if (tipo) partes.push(`Filtrando por ${LABEL_TIPO_COMPLETO[tipo] ?? tipo}`);
+    if (tipo)
+      partes.push(`Filtrando por ${LABEL_TIPO_ACOLHIMENTO[tipo] ?? tipo}`);
     if (unidadeIdValida) {
       const nome = unidades.find((u) => u.id === unidadeIdValida)?.nome ?? '—';
       partes.push(`Unidade: ${nome}`);
@@ -107,12 +90,12 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
           </div>
 
           <div className="flex items-end gap-3 flex-wrap">
-            <div className="w-40">
+            <div className="w-56">
               <Label
                 htmlFor="filtro-tipo"
                 className="text-xs text-slate-500 mb-1 block"
               >
-                Tipo
+                Tipo de serviço
               </Label>
               <Select
                 value={tipo || '__all__'}
@@ -131,19 +114,18 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
                   }
                 }}
               >
-                <SelectTrigger
-                  id="filtro-tipo"
-                  className="h-9 w-full text-sm"
-                >
-                  <SelectValue placeholder="Todos">
-                    {tipo ? (LABEL_TIPO_CURTO[tipo] ?? tipo) : 'Todos'}
+                <SelectTrigger id="filtro-tipo" className="h-9 w-full text-sm">
+                  <SelectValue placeholder="Todos os tipos">
+                    {tipo
+                      ? (LABEL_TIPO_ACOLHIMENTO[tipo] ?? tipo)
+                      : 'Todos os tipos'}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent position="popper">
                   <SelectItem value="__all__">Todos os tipos</SelectItem>
-                  {TIPOS.map((t, idx) => (
+                  {tiposAcolhimento.map((t, idx) => (
                     <SelectItem key={`tipo-${t}-${idx}`} value={t}>
-                      {LABEL_TIPO_COMPLETO[t]}
+                      {LABEL_TIPO_ACOLHIMENTO[t]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -161,11 +143,8 @@ export function FiltrosDashboard({ unidades }: FiltrosDashboardProps) {
                 value={unidadeIdValida || '__all__'}
                 onValueChange={(v) => setUnidadeId(v === '__all__' ? '' : v)}
               >
-                <SelectTrigger
-                  id="filtro-unidade"
-                  className="h-9 w-full text-sm [&>span]:truncate"
-                >
-                  <SelectValue placeholder="Todas" />
+                <SelectTrigger id="filtro-unidade" className="h-9 w-full text-sm">
+                  <SelectValue placeholder="Todas as unidades" />
                 </SelectTrigger>
                 <SelectContent position="popper">
                   <SelectItem value="__all__">Todas as unidades</SelectItem>

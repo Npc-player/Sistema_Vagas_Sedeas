@@ -1,26 +1,69 @@
 // src/lib/validations/unidade.ts
-// Validação de unidade com Zod — usada no client e no server.
-// A dupla camada (client + server) é obrigatória: o client melhora a UX,
-// o server garante a integridade mesmo se o client for contornado.
-
 import { z } from 'zod';
 
-const tiposAcolhimento = [
-  'ILPI',
-  'SAICA',
-  'CENTRO_DIA_IDOSO',
-  'SAI',
-  'RESIDENCIA_INCLUSIVA',
+// =====================================================
+// Tipos de serviço (Tipificação Nacional)
+// =====================================================
+export const tiposAcolhimento = [
+  'ABRIGO_INSTITUCIONAL',
+  'CASA_LAR',
   'CASA_PASSAGEM',
+  'RESIDENCIA_INCLUSIVA',
+  'REPUBLICA',
+  'FAMILIA_ACOLHEDORA',
+  'CALAMIDADES_EMERGENCIAS',
 ] as const;
 
-// Regex de telefone: aceita (00) 0000-0000 ou (00) 00000-0000
+export const LABEL_TIPO_ACOLHIMENTO: Record<string, string> = {
+  ABRIGO_INSTITUCIONAL: 'Abrigo Institucional',
+  CASA_LAR: 'Casa Lar',
+  CASA_PASSAGEM: 'Casa de Passagem',
+  RESIDENCIA_INCLUSIVA: 'Residência Inclusiva',
+  REPUBLICA: 'República',
+  FAMILIA_ACOLHEDORA: 'Família Acolhedora',
+  CALAMIDADES_EMERGENCIAS:
+    'Proteção em Calamidades Públicas e Emergências',
+};
+
+// =====================================================
+// Público-alvo (checkboxes)
+// =====================================================
+export const publicosAlvo = [
+  'CRIANCAS_ADOLESCENTES',
+  'JOVENS_EGRESSOS',
+  'CRIANCAS_ADOLESCENTES_DEFICIENCIA',
+  'ADULTOS_DEFICIENCIA',
+  'ADULTOS_FAMILIAS',
+  'MULHERES_VIOLENCIA',
+  'PESSOAS_IDOSAS',
+  'POPULACAO_LGBTQIA',
+  'POPULACAO_RUA',
+  'SAIDA_RUA',
+  'MIGRANTES_REFUGIADOS',
+  'FAMILIAS_DESABRIGADAS',
+] as const;
+
+export const LABEL_PUBLICO_ALVO: Record<string, string> = {
+  CRIANCAS_ADOLESCENTES: 'Crianças e Adolescentes',
+  JOVENS_EGRESSOS: 'Jovens Egressos de Serviços de Acolhimento',
+  CRIANCAS_ADOLESCENTES_DEFICIENCIA:
+    'Exclusivamente Crianças e Adolescentes com Deficiência',
+  ADULTOS_DEFICIENCIA: 'Exclusivamente para Adultos com Deficiência',
+  ADULTOS_FAMILIAS: 'Adultos e Famílias',
+  MULHERES_VIOLENCIA:
+    'Mulheres em Situação de Violência Doméstica ou Familiar',
+  PESSOAS_IDOSAS: 'Pessoas Idosas',
+  POPULACAO_LGBTQIA: 'População LGBTQIA+',
+  POPULACAO_RUA: 'População em Situação de Rua',
+  SAIDA_RUA: 'População em Processo de Saída das Ruas',
+  MIGRANTES_REFUGIADOS: 'Pessoas Migrantes e/ou Refugiadas',
+  FAMILIAS_DESABRIGADAS:
+    'Famílias Desabrigadas/Desalojadas Vítimas de Desastres',
+};
+
+// Regex de telefone, CEP e CNPJ
 const telefoneRegex = /^\(\d{2}\)\s?\d{4,5}-\d{4}$/;
-
-// Regex de CEP: aceita 00000-000 ou 00000000
 const cepRegex = /^\d{5}-?\d{3}$/;
-
-// Regex de CNPJ: aceita 00.000.000/0000-00 ou 14 dígitos
 const cnpjRegex = /^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/;
 
 export const unidadeSchema = z.object({
@@ -30,8 +73,12 @@ export const unidadeSchema = z.object({
     .max(200, 'O nome deve ter no máximo 200 caracteres'),
 
   tipo: z.enum(tiposAcolhimento, {
-    message: 'Selecione um tipo de acolhimento válido',
+    message: 'Selecione um tipo de serviço válido',
   }),
+
+  publicoAlvo: z
+    .array(z.enum(publicosAlvo))
+    .min(1, 'Selecione pelo menos um público-alvo'),
 
   cnpj: z
     .string()
@@ -76,7 +123,6 @@ export const unidadeSchema = z.object({
 
   responsavelEmail: z.string().email('E-mail inválido').max(200),
 
-  // Equipe técnica de referência (opcional)
   asVaraInfancia: z
     .string()
     .max(200, 'Máximo de 200 caracteres')
@@ -92,16 +138,10 @@ export const unidadeSchema = z.object({
     .max(200, 'Máximo de 200 caracteres')
     .optional()
     .or(z.literal('')),
-  psicCreas: z
-    .string()
-    .max(200, 'Máximo de 200 caracteres')
-    .optional()
-    .or(z.literal('')),
 });
 
 export type UnidadeInput = z.infer<typeof unidadeSchema>;
 
-// Schema específico para edição (inclui o ID)
 export const editarUnidadeSchema = unidadeSchema.extend({
   id: z.string().uuid('ID inválido'),
 });

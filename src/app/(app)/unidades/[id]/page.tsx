@@ -1,12 +1,13 @@
 // src/app/(app)/unidades/[id]/page.tsx
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db/client';
 import { getSession, can } from '@/lib/rbac';
-import { createClient } from '@/lib/supabase/server';
 import { MapaVagas, type VagaResumo, type StatusVaga } from '@/components/features/mapa-vagas';
+import { LABEL_TIPO_SERVICO, LABEL_PUBLICO } from '@/lib/constants/tipos';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BotaoStatusUnidade } from './botao-status';
 import {
   Card,
   CardContent,
@@ -24,14 +25,7 @@ import {
   BedDouble,
   Pencil,
 } from 'lucide-react';
-
-const LABEL_TIPO: Record<string, string> = {
-  ILPI: 'ILPI — Instituição de Longa Permanência para Idosos',
-  SAICA: 'SAICA — Acolhimento para Crianças e Adolescentes',
-  CENTRO_DIA_IDOSO: 'Centro Dia do Idoso',
-  SAI: 'SAI — Serviço de Acolhimento Institucional',
-  RESIDENCIA_INCLUSIVA: 'R.I. — Residência Inclusiva',
-};
+import { BotaoStatusUnidade } from './botao-status';
 
 export default async function DetalheUnidadePage({
   params,
@@ -41,15 +35,12 @@ export default async function DetalheUnidadePage({
   const { id } = await params;
   const session = await getSession();
 
-  if (!session) {
-    redirect('/login');
-  }
+  if (!session) redirect('/login');
+  if (!can.listarUnidades(session.role)) redirect('/dashboard');
 
-  if (!can.listarUnidades(session.role)) {
-    redirect('/dashboard');
-  }
-
-  const supabase = await createClient();
+  const supabase = await import('@/lib/supabase/server').then((m) =>
+    m.createClient()
+  );
 
   const { data: unidade } = await supabase
     .from('unidades')
@@ -57,15 +48,23 @@ export default async function DetalheUnidadePage({
     .eq('id', id)
     .maybeSingle();
 
-  if (!unidade) {
-    notFound();
-  }
+  if (!unidade) notFound();
 
   const { data: vagasRaw } = await supabase
     .from('vagas')
     .select('id, numero_leito, status, motivo_bloqueio, prazo_bloqueio')
     .eq('unidade_id', id)
     .order('numero_leito', { ascending: true });
+
+  // Público-alvo
+  const publicosRows = await db.execute(sql`
+    SELECT publico::text AS publico
+    FROM unidade_publico_alvo
+    WHERE unidade_id = ${id}
+  `);
+  const publicos = (publicosRows as unknown as Array<{ publico: string }>).map(
+    (p) => p.publico
+  );
 
   const vagas: VagaResumo[] = (vagasRaw ?? []).map((v) => ({
     id: v.id,
@@ -79,6 +78,11 @@ export default async function DetalheUnidadePage({
   const disponiveis = vagas.filter((v) => v.status === 'DISPONIVEL').length;
   const taxaOcupacao =
     vagas.length > 0 ? Math.round((ocupadas / vagas.length) * 100) : 0;
+
+  const temEquipe =
+    unidade.as_vara_infancia ||
+    unidade.psic_vara_infancia ||
+    unidade.as_creas;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -103,7 +107,7 @@ export default async function DetalheUnidadePage({
               </h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <Badge variant="outline" className="text-xs">
-                  {LABEL_TIPO[unidade.tipo] ?? unidade.tipo}
+                  {LABEL_TIPO_SERVICO[unidade.tipo] ?? unidade.tipo}
                 </Badge>
                 {unidade.ativo ? (
                   <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50">
@@ -198,6 +202,35 @@ export default async function DetalheUnidadePage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Coluna esquerda: dados */}
         <div className="lg:col-span-1 space-y-4">
+          {/* Público-alvo */}
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="w-4 h-4 text-teal-700" />
+                Público-alvo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {publicos.length === 0 ? (
+                <p className="text-sm text-slate-500 italic">
+                  Nenhum público-alvo cadastrado.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {publicos.map((p) => (
+                    <Badge
+                      key={p}
+                      variant="outline"
+                      className="text-xs text-teal-700 border-teal-200 bg-teal-50"
+                    >
+                      {LABEL_PUBLICO[p] ?? p}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="border-slate-200">
             <CardHeader>
               <CardTitle className="text-base">Localização</CardTitle>
@@ -267,11 +300,7 @@ export default async function DetalheUnidadePage({
             </CardContent>
           </Card>
 
-          {/* Equipe técnica de referência */}
-          {(unidade.as_vara_infancia ||
-            unidade.psic_vara_infancia ||
-            unidade.as_creas ||
-            unidade.psic_creas) && (
+          {temEquipe && (
             <Card className="border-slate-200">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -302,14 +331,6 @@ export default async function DetalheUnidadePage({
                   </p>
                   <p className="text-slate-900 mt-0.5">
                     {unidade.as_creas ?? '—'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wide">
-                    Psicólogo(a) — CREAS
-                  </p>
-                  <p className="text-slate-900 mt-0.5">
-                    {unidade.psic_creas ?? '—'}
                   </p>
                 </div>
               </CardContent>

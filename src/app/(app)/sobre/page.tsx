@@ -19,21 +19,28 @@ import {
   Mail,
 } from 'lucide-react';
 
-const VERSAO = '1.0.0';
+const VERSAO = '1.1.0';
 const DATA_VERSAO = 'outubro/2026';
 
 const NOTAS_VERSAO = [
+  'Nova tipificação nacional de serviços socioassistenciais: Abrigo Institucional, Casa Lar, Casa de Passagem, Residência Inclusiva, República, Família Acolhedora e Proteção em Calamidades Públicas e Emergências.',
+  'Cadastro de público-alvo por unidade com seleção múltipla (crianças e adolescentes, jovens egressos, pessoas idosas, população em situação de rua, mulheres em situação de violência, migrantes, famílias desabrigadas, entre outros).',
+  'Compatibilidade etária (RN-01) agora considera o público-alvo cadastrado na unidade.',
+  'Alerta automático de maioridade (RN-07) passa a identificar adolescentes por público-alvo, não mais por tipo de serviço.',
   'Módulo completo de Cadastro de Unidades com mapa visual de vagas (disponível, ocupada, bloqueada, reservada).',
   'Controle de Vagas com bloqueio/desbloqueio por motivo formal e prazo estimado (RN-08).',
   'Cadastro de Pessoas Acolhidas com criptografia em repouso (AES-256 via pgcrypto) de CPF, RG, alergias e comorbidades.',
-  'Fluxo de Admissão com protocolo único rastreável, validação de compatibilidade etária (RN-01) e limite de capacidade (RN-02).',
+  'Fluxo de Admissão com protocolo único rastreável, validação de compatibilidade etária e limite de capacidade (RN-02).',
   'Fluxo de Desacolhimento com coerência cronológica (RN-05) e liberação automática de vaga.',
-  'Dashboard com indicadores consolidados e filtros por tipo de acolhimento e unidade.',
-  'Alerta automático de maioridade em SAICA — 17 anos e 6 meses (RN-07).',
+  'Situações especiais (evasão e casos sob família extensa/substituta aguardando decisão judicial) com contabilização separada nos relatórios.',
+  'Campos processuais no acolhimento: número do processo, medida protetiva, guia de acolhimento e território.',
+  'Equipe técnica de referência por unidade (Assistente Social e Psicólogo da Vara da Infância, Assistente Social do CREAS) com possibilidade de override por acolhimento.',
+  'Dashboard com indicadores consolidados e filtros por tipo de serviço e unidade.',
   'Trilha de auditoria imutável (LGPD Art. 37) com registro de CREATE, READ, UPDATE, DELETE, LOGIN, LOGOUT e EXPORT.',
-  'Painel de auditoria com filtros avançados (usuário, ação, entidade, período) e visualização detalhada com diff campo-a-campo.',
+  'Painel de auditoria com filtros avançados e visualização detalhada com diff campo-a-campo.',
   'Exportação de trilha de auditoria em PDF com justificativa legal obrigatória e protocolo único.',
-  'Administração de Usuários com criação via Admin API, RBAC e auditoria completa.',
+  'Módulo de relatórios: Central de Regulação de Vagas (Institucional e Provisório) e Fluxo Mensal Detalhado (nominal), com exportação em PDF.',
+  'Administração de Usuários com criação via Admin API, RBAC, prontuário funcional e auditoria completa.',
   'Consulta Judiciária com mascaramento de dados sensíveis, justificativa obrigatória e protocolo de auditoria.',
   'Encarregado pelo Tratamento de Dados (DPO) configurável e canal de requisições LGPD (Art. 41).',
   'Perfil do usuário com troca de senha auditada e requisitos de senha forte.',
@@ -90,17 +97,49 @@ export default async function SobrePage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-700 leading-relaxed">
+          <p className="text-sm text-slate-700 leading-relaxed mb-3">
             Sistema web para centralização do controle de vagas e gestão das
-            pessoas acolhidas nos diferentes tipos de acolhimentos municipais
-            — ILPI (Instituição de Longa Permanência para Idosos), SAICA
-            (Serviço de Acolhimento Institucional para Crianças e
-            Adolescentes), Centro Dia Idoso, SAI — Serviço de Acolhimento Institucional e Residência
-            Inclusiva. O sistema oferece rastreabilidade completa com trilha
-            de auditoria imutável, criptografia de dados sensíveis (LGPD),
-            controle de acesso baseado em perfis (RBAC), isolamento de dados
-            por unidade (RLS) e módulo de interoperabilidade supervisionada
-            para o Poder Judiciário e Ministério Público.
+            pessoas acolhidas nos diferentes serviços de acolhimento
+            socioassistencial do município, conforme a Tipificação Nacional de
+            Serviços Socioassistenciais:
+          </p>
+          <ul className="text-sm text-slate-700 space-y-1 list-disc list-inside mb-3">
+            <li>
+              <strong>Abrigo Institucional</strong> — acolhimento provisório
+              para crianças, adolescentes, jovens, adultos, famílias e pessoas
+              idosas
+            </li>
+            <li>
+              <strong>Casa Lar</strong> — acolhimento em unidades residenciais
+              de pequeno porte
+            </li>
+            <li>
+              <strong>Casa de Passagem</strong> — acolhimento provisório de
+              curta duração
+            </li>
+            <li>
+              <strong>Residência Inclusiva</strong> — para jovens e adultos com
+              deficiência
+            </li>
+            <li>
+              <strong>República</strong> — para jovens e adultos em processo de
+              saída de serviços de acolhimento
+            </li>
+            <li>
+              <strong>Família Acolhedora</strong> — acolhimento familiar
+              provisório
+            </li>
+            <li>
+              <strong>Proteção em Calamidades Públicas e Emergências</strong> —
+              para famílias e indivíduos em situações emergenciais
+            </li>
+          </ul>
+          <p className="text-sm text-slate-700 leading-relaxed">
+            O sistema oferece rastreabilidade completa com trilha de auditoria
+            imutável, criptografia de dados sensíveis (LGPD), controle de
+            acesso baseado em perfis (RBAC), isolamento de dados por unidade
+            (RLS) e módulo de interoperabilidade supervisionada para o Poder
+            Judiciário e Ministério Público.
           </p>
         </CardContent>
       </Card>
@@ -174,6 +213,9 @@ export default async function SobrePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
+            <p className="text-sm font-medium text-slate-900">
+              Rafael Garcia Morcillo Junior
+            </p>
             <p className="text-sm font-medium text-slate-900 mt-2">
               Nelson Carvalho
             </p>

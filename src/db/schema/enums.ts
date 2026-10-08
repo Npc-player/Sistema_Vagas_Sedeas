@@ -10,12 +10,28 @@ export const userRoleEnum = pgEnum('user_role', [
 ]);
 
 export const tipoAcolhimentoEnum = pgEnum('tipo_acolhimento', [
-  'ILPI',
-  'SAICA',
-  'CENTRO_DIA_IDOSO',
-  'SAI',
-  'RESIDENCIA_INCLUSIVA',
+  'ABRIGO_INSTITUCIONAL',
+  'CASA_LAR',
   'CASA_PASSAGEM',
+  'RESIDENCIA_INCLUSIVA',
+  'REPUBLICA',
+  'FAMILIA_ACOLHEDORA',
+  'CALAMIDADES_EMERGENCIAS',
+]);
+
+export const publicoAlvoEnum = pgEnum('publico_alvo', [
+  'CRIANCAS_ADOLESCENTES',
+  'JOVENS_EGRESSOS',
+  'CRIANCAS_ADOLESCENTES_DEFICIENCIA',
+  'ADULTOS_DEFICIENCIA',
+  'ADULTOS_FAMILIAS',
+  'MULHERES_VIOLENCIA',
+  'PESSOAS_IDOSAS',
+  'POPULACAO_LGBTQIA',
+  'POPULACAO_RUA',
+  'SAIDA_RUA',
+  'MIGRANTES_REFUGIADOS',
+  'FAMILIAS_DESABRIGADAS',
 ]);
 
 export const statusVagaEnum = pgEnum('status_vaga', [

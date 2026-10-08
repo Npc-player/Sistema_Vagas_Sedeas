@@ -1,20 +1,25 @@
-// src/app/unidades/nova/unidade-form.tsx
+// src/app/(app)/unidades/nova/unidade-form.tsx
 'use client';
 
 import { useActionState } from 'react';
-// import { useForm } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { unidadeSchema, type UnidadeInput } from '@/lib/validations/unidade';
+import Link from 'next/link';
+import {
+  unidadeSchema,
+  type UnidadeInput,
+  LABEL_TIPO_ACOLHIMENTO,
+  LABEL_PUBLICO_ALVO,
+  publicosAlvo,
+  tiposAcolhimento,
+} from '@/lib/validations/unidade';
 import { criarUnidadeAction, type UnidadeActionState } from '../actions';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useForm, useWatch, Controller } from 'react-hook-form';
-import Link from 'next/link';
-import { InputTelefone } from '@/components/ui/input-telefone';
-import { InputCnpj } from '@/components/ui/input-cnpj';
 import {
   Select,
   SelectContent,
@@ -32,15 +37,6 @@ import {
 
 const initialState: UnidadeActionState = {};
 
-const TIPOS = [
-  { value: 'ILPI', label: 'ILPI — Instituição de Longa Permanência para Idosos' },
-  { value: 'SAICA', label: 'SAICA — Acolhimento para Crianças e Adolescentes' },
-  { value: 'CENTRO_DIA_IDOSO', label: 'Centro Dia do Idoso' },
-  { value: 'SAI', label: 'SAI — Serviço de Acolhimento Institucional' },
-  { value: 'RESIDENCIA_INCLUSIVA', label: 'R.I. — Residência Inclusiva' },
-  { value: 'CASA_PASSAGEM', label: 'Casa de Passagem (acolhimento provisório)' },
-] as const;
-
 export function UnidadeForm() {
   const [state, formAction, isPending] = useActionState(
     criarUnidadeAction,
@@ -56,6 +52,7 @@ export function UnidadeForm() {
     resolver: zodResolver(unidadeSchema),
     defaultValues: {
       tipo: undefined,
+      publicoAlvo: [],
     },
   });
 
@@ -68,12 +65,11 @@ export function UnidadeForm() {
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
+
       {state.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
         <Alert variant="destructive">
           <AlertDescription>
-            <p className="font-medium mb-1">
-              Corrija os campos destacados:
-            </p>
+            <p className="font-medium mb-1">Corrija os campos destacados:</p>
             <ul className="list-disc list-inside text-sm space-y-0.5">
               {Object.entries(state.fieldErrors).map(([campo, msgs]) => (
                 <li key={campo}>
@@ -85,7 +81,7 @@ export function UnidadeForm() {
         </Alert>
       )}
 
-      {/* ============ Identificação ============ */}
+      {/* Identificação */}
       <Card>
         <CardHeader>
           <CardTitle>Identificação</CardTitle>
@@ -100,7 +96,7 @@ export function UnidadeForm() {
           </div>
 
           <div>
-            <Label htmlFor="tipo">Tipo de acolhimento *</Label>
+            <Label htmlFor="tipo">Tipo de serviço *</Label>
             <Select
               value={tipoAtual ?? ''}
               onValueChange={(v) =>
@@ -113,42 +109,32 @@ export function UnidadeForm() {
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
+                {tiposAcolhimento.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {LABEL_TIPO_ACOLHIMENTO[t]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {/* Input oculto para enviar o tipo no FormData */}
             <input type="hidden" {...register('tipo')} />
             {errors.tipo && (
               <p className="text-sm text-red-600 mt-1">{errors.tipo.message}</p>
             )}
           </div>
 
-                    <Controller
-            name="cnpj"
-            control={control}
-            render={({ field, fieldState }) => (
-              <div>
-                <Label htmlFor="cnpj">CNPJ (opcional)</Label>
-                <InputCnpj
-                  id="cnpj"
-                  placeholder="00.000.000/0000-00"
-                  value={field.value ?? ''}
-                  onValueChange={field.onChange}
-                />
-                {fieldState.error && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {fieldState.error.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
-
           <div>
+            <Label htmlFor="cnpj">CNPJ (opcional)</Label>
+            <Input
+              id="cnpj"
+              placeholder="00.000.000/0000-00"
+              {...register('cnpj')}
+            />
+            {errors.cnpj && (
+              <p className="text-sm text-red-600 mt-1">{errors.cnpj.message}</p>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
             <Label htmlFor="capacidadeTotal">Capacidade total de vagas *</Label>
             <Input
               id="capacidadeTotal"
@@ -165,7 +151,57 @@ export function UnidadeForm() {
         </CardContent>
       </Card>
 
-      {/* ============ Endereço ============ */}
+      {/* Público-alvo */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Público-alvo *</CardTitle>
+          <CardDescription>
+            Selecione todos os públicos atendidos por esta unidade.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Controller
+            control={control}
+            name="publicoAlvo"
+            render={({ field }) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {publicosAlvo.map((p) => {
+                  const checked = field.value?.includes(p) ?? false;
+                  return (
+                    <label
+                      key={p}
+                      className="flex items-start gap-2 cursor-pointer p-2 rounded-md hover:bg-slate-50"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          if (v) {
+                            field.onChange([...(field.value ?? []), p]);
+                          } else {
+                            field.onChange(
+                              (field.value ?? []).filter((x) => x !== p)
+                            );
+                          }
+                        }}
+                      />
+                      <span className="text-sm text-slate-700 leading-snug">
+                        {LABEL_PUBLICO_ALVO[p]}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
+          {errors.publicoAlvo && (
+            <p className="text-sm text-red-600 mt-2">
+              {errors.publicoAlvo.message}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Endereço */}
       <Card>
         <CardHeader>
           <CardTitle>Endereço</CardTitle>
@@ -236,11 +272,7 @@ export function UnidadeForm() {
 
           <div className="md:col-span-2">
             <Label htmlFor="cep">CEP *</Label>
-            <Input
-              id="cep"
-              placeholder="00000-000"
-              {...register('cep')}
-            />
+            <Input id="cep" placeholder="00000-000" {...register('cep')} />
             {errors.cep && (
               <p className="text-sm text-red-600 mt-1">{errors.cep.message}</p>
             )}
@@ -248,7 +280,7 @@ export function UnidadeForm() {
         </CardContent>
       </Card>
 
-      {/* ============ Contato institucional ============ */}
+      {/* Contato institucional */}
       <Card>
         <CardHeader>
           <CardTitle>Contato institucional</CardTitle>
@@ -256,9 +288,9 @@ export function UnidadeForm() {
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="telefoneInstitucional">Telefone *</Label>
-            <InputTelefone
+            <Input
               id="telefoneInstitucional"
-              placeholder="(00) 00000-0000"
+              placeholder="(00) 0000-0000"
               {...register('telefoneInstitucional')}
             />
             {errors.telefoneInstitucional && (
@@ -284,7 +316,7 @@ export function UnidadeForm() {
         </CardContent>
       </Card>
 
-      {/* ============ Responsável técnico ============ */}
+      {/* Responsável técnico */}
       <Card>
         <CardHeader>
           <CardTitle>Responsável técnico</CardTitle>
@@ -302,7 +334,7 @@ export function UnidadeForm() {
 
           <div>
             <Label htmlFor="responsavelTelefone">Telefone *</Label>
-            <InputTelefone
+            <Input
               id="responsavelTelefone"
               placeholder="(00) 00000-0000"
               {...register('responsavelTelefone')}
@@ -330,7 +362,7 @@ export function UnidadeForm() {
         </CardContent>
       </Card>
 
-      {/* ============ Equipe técnica de referência ============ */}
+      {/* Equipe técnica de referência */}
       <Card>
         <CardHeader>
           <CardTitle>Equipe técnica de referência</CardTitle>
@@ -339,7 +371,7 @@ export function UnidadeForm() {
             relatórios mensais de fluxo de acolhimento.
           </CardDescription>
         </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <Label htmlFor="asVaraInfancia">
               Assistente Social Vara da Infância
@@ -349,11 +381,6 @@ export function UnidadeForm() {
               placeholder="Ex.: Patrícia"
               {...register('asVaraInfancia')}
             />
-            {errors.asVaraInfancia && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.asVaraInfancia.message}
-              </p>
-            )}
           </div>
 
           <div>
@@ -365,11 +392,6 @@ export function UnidadeForm() {
               placeholder="Ex.: Tainá"
               {...register('psicVaraInfancia')}
             />
-            {errors.psicVaraInfancia && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.psicVaraInfancia.message}
-              </p>
-            )}
           </div>
 
           <div>
@@ -379,25 +401,6 @@ export function UnidadeForm() {
               placeholder="Ex.: Denise"
               {...register('asCreas')}
             />
-            {errors.asCreas && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.asCreas.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="psicCreas">Psicólogo(a) CREAS</Label>
-            <Input
-              id="psicCreas"
-              placeholder="Ex.: Mariana"
-              {...register('psicCreas')}
-            />
-            {errors.psicCreas && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.psicCreas.message}
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>

@@ -4,9 +4,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, eq, gt} from 'drizzle-orm';
 import { db } from '@/db/client';
-import { unidades, vagas } from '@/db/schema';
+import { unidades, vagas, unidadePublicoAlvo } from '@/db/schema';
 import {
   unidadeSchema,
   editarUnidadeSchema,
@@ -21,7 +21,6 @@ export type UnidadeActionState = {
   fieldErrors?: Record<string, string[]>;
 };
 
-// Monta o contexto de audit a partir de uma sessão já validada.
 async function buildContext(session: Session): Promise<AuditContext> {
   const h = await headers();
   const forwarded = h.get('x-forwarded-for');
@@ -34,8 +33,14 @@ async function buildContext(session: Session): Promise<AuditContext> {
   };
 }
 
+// Extrai os públicos-alvo marcados (checkboxes chegam como múltiplos "publicoAlvo")
+function extrairPublicos(formData: FormData): string[] {
+  const valores = formData.getAll('publicoAlvo');
+  return valores.map((v) => String(v)).filter(Boolean);
+}
+
 // =====================================================
-// Criar unidade
+// CRIAR unidade
 // =====================================================
 export async function criarUnidadeAction(
   _prevState: UnidadeActionState,
@@ -57,6 +62,7 @@ export async function criarUnidadeAction(
   const raw = {
     nome: formData.get('nome'),
     tipo: formData.get('tipo'),
+    publicoAlvo: extrairPublicos(formData),
     cnpj: formData.get('cnpj') ?? '',
     logradouro: formData.get('logradouro'),
     numero: formData.get('numero'),
@@ -74,7 +80,6 @@ export async function criarUnidadeAction(
     asVaraInfancia: formData.get('asVaraInfancia') ?? '',
     psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
     asCreas: formData.get('asCreas') ?? '',
-    psicCreas: formData.get('psicCreas') ?? '',
   };
 
   const parsed = unidadeSchema.safeParse(raw);
@@ -115,11 +120,21 @@ export async function criarUnidadeAction(
           asVaraInfancia: data.asVaraInfancia || null,
           psicVaraInfancia: data.psicVaraInfancia || null,
           asCreas: data.asCreas || null,
-          psicCreas: data.psicCreas || null,
           ativo: true,
         })
         .returning();
 
+      // Insere públicos-alvo
+      if (data.publicoAlvo.length > 0) {
+        await tx.insert(unidadePublicoAlvo).values(
+          data.publicoAlvo.map((p) => ({
+            unidadeId: unidade.id,
+            publico: p,
+          }))
+        );
+      }
+
+      // Cria as vagas
       const vagasValues = Array.from(
         { length: data.capacidadeTotal },
         (_, i) => ({
@@ -140,7 +155,10 @@ export async function criarUnidadeAction(
       action: 'CREATE',
       entity: 'unidades',
       entityId: newId,
-      after: data,
+      after: {
+        ...data,
+        publicoAlvo: data.publicoAlvo,
+      },
     });
   } catch (error) {
     console.error('[criarUnidadeAction] erro:', error);
@@ -154,7 +172,7 @@ export async function criarUnidadeAction(
 }
 
 // =====================================================
-// Editar unidade
+// EDITAR unidade
 // =====================================================
 export async function editarUnidadeAction(
   _prevState: UnidadeActionState,
@@ -177,6 +195,7 @@ export async function editarUnidadeAction(
     id: formData.get('id'),
     nome: formData.get('nome'),
     tipo: formData.get('tipo'),
+    publicoAlvo: extrairPublicos(formData),
     cnpj: formData.get('cnpj') ?? '',
     logradouro: formData.get('logradouro'),
     numero: formData.get('numero'),
@@ -194,7 +213,6 @@ export async function editarUnidadeAction(
     asVaraInfancia: formData.get('asVaraInfancia') ?? '',
     psicVaraInfancia: formData.get('psicVaraInfancia') ?? '',
     asCreas: formData.get('asCreas') ?? '',
-    psicCreas: formData.get('psicCreas') ?? '',
   };
 
   const parsed = editarUnidadeSchema.safeParse(raw);
@@ -218,9 +236,7 @@ export async function editarUnidadeAction(
         .where(eq(unidades.id, data.id))
         .limit(1);
 
-      if (!antes) {
-        throw new Error('NOT_FOUND');
-      }
+      if (!antes) throw new Error('NOT_FOUND');
 
       await tx
         .update(unidades)
@@ -244,11 +260,25 @@ export async function editarUnidadeAction(
           asVaraInfancia: data.asVaraInfancia || null,
           psicVaraInfancia: data.psicVaraInfancia || null,
           asCreas: data.asCreas || null,
-          psicCreas: data.psicCreas || null,
           updatedAt: new Date(),
         })
         .where(eq(unidades.id, data.id));
 
+      // Atualiza públicos-alvo: remove todos e reinsere
+      await tx
+        .delete(unidadePublicoAlvo)
+        .where(eq(unidadePublicoAlvo.unidadeId, data.id));
+
+      if (data.publicoAlvo.length > 0) {
+        await tx.insert(unidadePublicoAlvo).values(
+          data.publicoAlvo.map((p) => ({
+            unidadeId: data.id,
+            publico: p,
+          }))
+        );
+      }
+
+      // Ajuste de vagas conforme capacidade
       const capacidadeAntiga = antes.capacidadeTotal;
       const capacidadeNova = data.capacidadeTotal;
 

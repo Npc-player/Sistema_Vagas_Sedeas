@@ -27,13 +27,7 @@ import {
   Building2,
 } from 'lucide-react';
 
-const LABEL_TIPO: Record<string, string> = {
-  ILPI: 'ILPI',
-  SAICA: 'SAICA',
-  CENTRO_DIA_IDOSO: 'Centro Dia',
-  SAI: 'SAI — Serviço de Acolhimento Institucional',
-  RESIDENCIA_INCLUSIVA: 'R.I.',
-};
+import { LABEL_TIPO_SERVICO_CURTO as LABEL_TIPO } from '@/lib/constants/tipos';
 
 interface VagaRow {
   unidade_id: string;

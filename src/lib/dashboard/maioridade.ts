@@ -40,7 +40,6 @@ export async function getAlertasMaioridadeSaica(): Promise<AlertaMaioridade[]> {
       ac.data_acolhimento AS "dataAcolhimento",
       EXTRACT(YEAR FROM AGE(CURRENT_DATE, a.data_nascimento))::int AS "idadeAnos",
       (
-        -- Meses até completar 18 anos (pode ser negativo se já completou)
         EXTRACT(YEAR FROM AGE(a.data_nascimento + INTERVAL '18 years', CURRENT_DATE)) * 12
         + EXTRACT(MONTH FROM AGE(a.data_nascimento + INTERVAL '18 years', CURRENT_DATE))
       )::int AS "mesesAte18"
@@ -48,7 +47,11 @@ export async function getAlertasMaioridadeSaica(): Promise<AlertaMaioridade[]> {
     INNER JOIN acolhidos a ON a.id = ac.acolhido_id
     INNER JOIN unidades u ON u.id = ac.unidade_id
     WHERE ac.ativo = true
-      AND u.tipo = 'SAICA'
+      AND EXISTS (
+        SELECT 1 FROM unidade_publico_alvo upa
+        WHERE upa.unidade_id = u.id
+          AND upa.publico = 'CRIANCAS_ADOLESCENTES'::publico_alvo
+      )
       AND a.data_nascimento <= (CURRENT_DATE - INTERVAL '17 years 6 months')
     ORDER BY a.data_nascimento ASC
   `);

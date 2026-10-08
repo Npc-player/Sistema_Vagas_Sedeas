@@ -8,15 +8,18 @@ import Link from 'next/link';
 import {
   editarUnidadeSchema,
   type EditarUnidadeInput,
+  LABEL_TIPO_ACOLHIMENTO,
+  LABEL_PUBLICO_ALVO,
+  publicosAlvo,
+  tiposAcolhimento,
 } from '@/lib/validations/unidade';
 import { editarUnidadeAction, type UnidadeActionState } from '../../actions';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { InputTelefone } from '@/components/ui/input-telefone';
-import { InputCnpj } from '@/components/ui/input-cnpj';
 import {
   Select,
   SelectContent,
@@ -33,15 +36,6 @@ import {
 } from '@/components/ui/card';
 
 const initialState: UnidadeActionState = {};
-
-const TIPOS = [
-  { value: 'ILPI', label: 'ILPI — Instituição de Longa Permanência para Idosos' },
-  { value: 'SAICA', label: 'SAICA — Acolhimento para Crianças e Adolescentes' },
-  { value: 'CENTRO_DIA_IDOSO', label: 'Centro Dia do Idoso' },
-  { value: 'SAI', label: 'SAI — Serviço de Acolhimento Institucional' },
-  { value: 'RESIDENCIA_INCLUSIVA', label: 'R.I. — Residência Inclusiva' },
-  { value: 'CASA_PASSAGEM', label: 'Casa de Passagem (acolhimento provisório)' },
-] as const;
 
 interface EditarUnidadeFormProps {
   defaultValues: EditarUnidadeInput;
@@ -107,7 +101,7 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="tipo">Tipo de acolhimento *</Label>
+            <Label htmlFor="tipo">Tipo de serviço *</Label>
             <Select
               value={tipoAtual ?? ''}
               onValueChange={(v) =>
@@ -120,9 +114,9 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
+                {tiposAcolhimento.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {LABEL_TIPO_ACOLHIMENTO[t]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -133,26 +127,17 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
             )}
           </div>
 
-                    <Controller
-            name="cnpj"
-            control={control}
-            render={({ field, fieldState }) => (
-              <div>
-                <Label htmlFor="cnpj">CNPJ (opcional)</Label>
-                <InputCnpj
-                  id="cnpj"
-                  placeholder="00.000.000/0000-00"
-                  value={field.value ?? ''}
-                  onValueChange={field.onChange}
-                />
-                {fieldState.error && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {fieldState.error.message}
-                  </p>
-                )}
-              </div>
+          <div>
+            <Label htmlFor="cnpj">CNPJ (opcional)</Label>
+            <Input
+              id="cnpj"
+              placeholder="00.000.000/0000-00"
+              {...register('cnpj')}
+            />
+            {errors.cnpj && (
+              <p className="text-sm text-red-600 mt-1">{errors.cnpj.message}</p>
             )}
-          />
+          </div>
 
           <div className="md:col-span-2">
             <Label htmlFor="capacidadeTotal">Capacidade total de vagas *</Label>
@@ -175,6 +160,56 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Público-alvo */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Público-alvo *</CardTitle>
+          <CardDescription>
+            Selecione todos os públicos atendidos por esta unidade.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Controller
+            control={control}
+            name="publicoAlvo"
+            render={({ field }) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {publicosAlvo.map((p) => {
+                  const checked = field.value?.includes(p) ?? false;
+                  return (
+                    <label
+                      key={p}
+                      className="flex items-start gap-2 cursor-pointer p-2 rounded-md hover:bg-slate-50"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          if (v) {
+                            field.onChange([...(field.value ?? []), p]);
+                          } else {
+                            field.onChange(
+                              (field.value ?? []).filter((x) => x !== p)
+                            );
+                          }
+                        }}
+                      />
+                      <span className="text-sm text-slate-700 leading-snug">
+                        {LABEL_PUBLICO_ALVO[p]}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
+          {errors.publicoAlvo && (
+            <p className="text-sm text-red-600 mt-2">
+              {errors.publicoAlvo.message}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -265,9 +300,9 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="telefoneInstitucional">Telefone *</Label>
-            <InputTelefone
+            <Input
               id="telefoneInstitucional"
-              placeholder="(00) 00000-0000"
+              placeholder="(00) 0000-0000"
               {...register('telefoneInstitucional')}
             />
             {errors.telefoneInstitucional && (
@@ -311,7 +346,7 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
 
           <div>
             <Label htmlFor="responsavelTelefone">Telefone *</Label>
-            <InputTelefone
+            <Input
               id="responsavelTelefone"
               placeholder="(00) 00000-0000"
               {...register('responsavelTelefone')}
@@ -348,7 +383,7 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
             relatórios mensais de fluxo de acolhimento.
           </CardDescription>
         </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <Label htmlFor="asVaraInfancia">
               Assistente Social Vara da Infância
@@ -358,11 +393,6 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
               placeholder="Ex.: Patrícia"
               {...register('asVaraInfancia')}
             />
-            {errors.asVaraInfancia && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.asVaraInfancia.message}
-              </p>
-            )}
           </div>
 
           <div>
@@ -374,11 +404,6 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
               placeholder="Ex.: Tainá"
               {...register('psicVaraInfancia')}
             />
-            {errors.psicVaraInfancia && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.psicVaraInfancia.message}
-              </p>
-            )}
           </div>
 
           <div>
@@ -388,25 +413,6 @@ export function EditarUnidadeForm({ defaultValues }: EditarUnidadeFormProps) {
               placeholder="Ex.: Denise"
               {...register('asCreas')}
             />
-            {errors.asCreas && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.asCreas.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="psicCreas">Psicólogo(a) CREAS</Label>
-            <Input
-              id="psicCreas"
-              placeholder="Ex.: Mariana"
-              {...register('psicCreas')}
-            />
-            {errors.psicCreas && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.psicCreas.message}
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>
