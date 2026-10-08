@@ -19,10 +19,13 @@ import {
   Mail,
 } from 'lucide-react';
 
-const VERSAO = '1.1.0';
+const VERSAO = '1.2.0';
 const DATA_VERSAO = 'outubro/2026';
 
 const NOTAS_VERSAO = [
+  'Filtros avançados em Controle de Vagas: tipo de serviço e unidade, com aplicação aos indicadores e à tabela consolidada.',
+  'Separação da listagem de Pessoas Acolhidas em duas abas: pessoas em acolhimento ativo e pessoas cadastradas sem vínculo.',
+  'Filtros em Pessoas Acolhidas: nome (busca parcial), CPF (via hash HMAC criptografado) e número de medida protetiva.',
   'Nova tipificação nacional de serviços socioassistenciais: Abrigo Institucional, Casa Lar, Casa de Passagem, Residência Inclusiva, República, Família Acolhedora e Proteção em Calamidades Públicas e Emergências.',
   'Cadastro de público-alvo por unidade com seleção múltipla (crianças e adolescentes, jovens egressos, pessoas idosas, população em situação de rua, mulheres em situação de violência, migrantes, famílias desabrigadas, entre outros).',
   'Compatibilidade etária (RN-01) agora considera o público-alvo cadastrado na unidade.',
