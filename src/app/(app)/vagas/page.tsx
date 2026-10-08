@@ -1,8 +1,10 @@
 // src/app/(app)/vagas/page.tsx
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db/client';
 import { getSession, can } from '@/lib/rbac';
-import { createClient } from '@/lib/supabase/server';
+import { FiltrosVagas, type UnidadeOption } from './filtros';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { LABEL_TIPO_SERVICO_CURTO } from '@/lib/constants/tipos';
 import {
   BedDouble,
   CheckCircle2,
@@ -25,9 +28,17 @@ import {
   Clock,
   ChevronRight,
   Building2,
+  Search,
 } from 'lucide-react';
 
-import { LABEL_TIPO_SERVICO_CURTO as LABEL_TIPO } from '@/lib/constants/tipos';
+function allRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows: unknown[] }).rows;
+    if (Array.isArray(rows)) return rows as T[];
+  }
+  return [];
+}
 
 interface VagaRow {
   unidade_id: string;
@@ -49,31 +60,77 @@ interface UnidadeResumo {
   taxa: number;
 }
 
-export default async function VagasPage() {
+interface PageProps {
+  searchParams: Promise<{ tipo?: string; unidadeId?: string }>;
+}
+
+export default async function VagasPage({ searchParams }: PageProps) {
   const session = await getSession();
 
   if (!session) redirect('/login');
-  if (!can.editarVagas(session.role) && session.role !== 'CONSELHO_MUNICIPAL' && session.role !== 'JUDICIARIO_MP') {
+  if (
+    !can.editarVagas(session.role) &&
+    session.role !== 'CONSELHO_MUNICIPAL' &&
+    session.role !== 'JUDICIARIO_MP'
+  ) {
     redirect('/dashboard');
   }
 
-  const supabase = await createClient();
+  const params = await searchParams;
+  const filtroTipo = params.tipo;
+  const filtroUnidadeId = params.unidadeId;
 
-  // Busca unidades + vagas em duas queries (mais simples que um join manual)
-  const { data: unidades } = await supabase
-    .from('unidades')
-    .select('id, nome, tipo, cidade, uf, ativo')
-    .order('nome');
+  // Lista completa de unidades (para o filtro)
+  const unidadesRaw = await db.execute(sql`
+    SELECT id, nome, tipo::text AS tipo
+    FROM unidades
+    WHERE ativo = true
+    ORDER BY nome
+  `);
+  const unidades = allRows<UnidadeOption>(unidadesRaw);
 
-  const { data: vagas } = await supabase
-    .from('vagas')
-    .select('unidade_id, status');
+  // Busca unidades filtradas + vagas
+  const condicoes = [sql`u.ativo = true`];
+  if (filtroTipo) {
+    condicoes.push(sql`u.tipo = ${filtroTipo}::tipo_acolhimento`);
+  }
+  if (filtroUnidadeId) {
+    condicoes.push(sql`u.id = ${filtroUnidadeId}`);
+  }
+  const whereUnidades = sql.join(condicoes, sql` AND `);
 
-  const vagasList: VagaRow[] = vagas ?? [];
+  const unidadesFiltradasRaw = await db.execute(sql`
+    SELECT
+      u.id,
+      u.nome,
+      u.tipo::text AS tipo,
+      u.cidade,
+      u.uf,
+      u.ativo
+    FROM unidades u
+    WHERE ${whereUnidades}
+    ORDER BY u.nome
+  `);
+
+  const vagasRaw = await db.execute(sql`
+    SELECT v.unidade_id AS unidade_id, v.status::text AS status
+    FROM vagas v
+    INNER JOIN unidades u ON u.id = v.unidade_id
+    WHERE ${whereUnidades}
+  `);
+
+  const vagasList: VagaRow[] = allRows<VagaRow>(vagasRaw);
 
   // Agrupa por unidade
   const porUnidade = new Map<string, UnidadeResumo>();
-  for (const u of unidades ?? []) {
+  for (const u of allRows<{
+    id: string;
+    nome: string;
+    tipo: string;
+    cidade: string;
+    uf: string;
+    ativo: boolean;
+  }>(unidadesFiltradasRaw)) {
     porUnidade.set(u.id, {
       id: u.id,
       nome: u.nome,
@@ -121,9 +178,16 @@ export default async function VagasPage() {
     totais.total > 0 ? Math.round((totais.ocupadas / totais.total) * 100) : 0;
 
   // Agrupa por tipo
-  const porTipo = new Map<string, { total: number; ocupadas: number; disponiveis: number }>();
+  const porTipo = new Map<
+    string,
+    { total: number; ocupadas: number; disponiveis: number }
+  >();
   for (const u of lista) {
-    const atual = porTipo.get(u.tipo) ?? { total: 0, ocupadas: 0, disponiveis: 0 };
+    const atual = porTipo.get(u.tipo) ?? {
+      total: 0,
+      ocupadas: 0,
+      disponiveis: 0,
+    };
     atual.total += u.total;
     atual.ocupadas += u.ocupadas;
     atual.disponiveis += u.disponiveis;
@@ -133,10 +197,12 @@ export default async function VagasPage() {
   const ativas = lista.filter((u) => u.ativo);
   const inativas = lista.filter((u) => !u.ativo);
 
+  const temFiltro = !!(filtroTipo || filtroUnidadeId);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Cabeçalho */}
-      <div className="mb-8">
+      <div className="mb-6">
         <p className="text-xs font-medium text-teal-700 uppercase tracking-wider mb-1">
           Operação
         </p>
@@ -148,17 +214,20 @@ export default async function VagasPage() {
         </p>
       </div>
 
+      {/* Filtros */}
+      <FiltrosVagas unidades={unidades} />
+
       {/* Cards de resumo geral */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card className="border-slate-200">
-          <CardContent className="pt-6">
+          <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
                 <BedDouble className="w-4 h-4 text-slate-600" />
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wide">
-                  Capacidade total
+                  Capacidade
                 </p>
                 <p className="text-2xl font-semibold text-slate-900">
                   {totais.total}
@@ -169,7 +238,7 @@ export default async function VagasPage() {
         </Card>
 
         <Card className="border-slate-200">
-          <CardContent className="pt-6">
+          <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -187,7 +256,7 @@ export default async function VagasPage() {
         </Card>
 
         <Card className="border-slate-200">
-          <CardContent className="pt-6">
+          <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center">
                 <XCircle className="w-4 h-4 text-rose-600" />
@@ -205,7 +274,7 @@ export default async function VagasPage() {
         </Card>
 
         <Card className="border-slate-200">
-          <CardContent className="pt-6">
+          <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Clock className="w-4 h-4 text-amber-600" />
@@ -225,7 +294,7 @@ export default async function VagasPage() {
 
       {/* Cards por tipo */}
       {porTipo.size > 0 && (
-        <div className="mb-8">
+        <div className="mb-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
             Por tipo de serviço
           </h2>
@@ -240,7 +309,7 @@ export default async function VagasPage() {
                   <CardContent className="pt-5 pb-5">
                     <div className="flex items-center justify-between mb-3">
                       <Badge variant="outline" className="text-xs">
-                        {LABEL_TIPO[tipo] ?? tipo}
+                        {LABEL_TIPO_SERVICO_CURTO[tipo] ?? tipo}
                       </Badge>
                       <span className="text-xs text-slate-500">
                         {taxa}% ocupado
@@ -277,14 +346,25 @@ export default async function VagasPage() {
           <CardContent className="pt-6">
             {ativas.length === 0 ? (
               <div className="text-center py-12">
-                <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">
-                  Nenhuma unidade ativa cadastrada.
-                </p>
-                {can.criarUnidade(session.role) && (
-                  <Link href="/unidades/nova">
-                    <Button className="mt-4">Cadastrar unidade</Button>
-                  </Link>
+                {temFiltro ? (
+                  <>
+                    <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Nenhuma unidade encontrada com os filtros aplicados.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Nenhuma unidade ativa cadastrada.
+                    </p>
+                    {can.criarUnidade(session.role) && (
+                      <Link href="/unidades/nova">
+                        <Button className="mt-4">Cadastrar unidade</Button>
+                      </Link>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
@@ -314,7 +394,7 @@ export default async function VagasPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
-                          {LABEL_TIPO[u.tipo] ?? u.tipo}
+                          {LABEL_TIPO_SERVICO_CURTO[u.tipo] ?? u.tipo}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center text-sm">
