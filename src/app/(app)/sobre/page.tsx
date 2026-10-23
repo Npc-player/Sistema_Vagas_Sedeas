@@ -19,10 +19,13 @@ import {
   Mail,
 } from 'lucide-react';
 
-const VERSAO = '1.2.0';
+const VERSAO = '1.3.0';
 const DATA_VERSAO = 'outubro/2026';
 
 const NOTAS_VERSAO = [
+  'Central de Regulação de Vagas reestruturada: uma única tabela com duas linhas por unidade (PROVISÓRIAS e DEFINITIVAS), mesclagem vertical da coluna UNIDADE e fundo verde intercalado por unidade.',
+  'Removida a segunda tabela "Serviço de Acolhimento Institucional Provisório" — a classificação de regime agora é feita diretamente no acolhimento.',
+  'Colunas META e VAGAS DISPONÍVEIS calculadas por unidade e exibidas apenas na linha PROVISÓRIAS; as demais colunas (ENTRADAS, SAÍDAS, EVASÕES/OUTROS, ACOLHIDOS, FIXOS) segmentadas por regime.',
   'Filtros avançados em Controle de Vagas: tipo de serviço e unidade, com aplicação aos indicadores e à tabela consolidada.',
   'Separação da listagem de Pessoas Acolhidas em duas abas: pessoas em acolhimento ativo e pessoas cadastradas sem vínculo.',
   'Filtros em Pessoas Acolhidas: nome (busca parcial), CPF (via hash HMAC criptografado) e número de medida protetiva.',
@@ -42,7 +45,7 @@ const NOTAS_VERSAO = [
   'Trilha de auditoria imutável (LGPD Art. 37) com registro de CREATE, READ, UPDATE, DELETE, LOGIN, LOGOUT e EXPORT.',
   'Painel de auditoria com filtros avançados e visualização detalhada com diff campo-a-campo.',
   'Exportação de trilha de auditoria em PDF com justificativa legal obrigatória e protocolo único.',
-  'Módulo de relatórios: Central de Regulação de Vagas (Institucional e Provisório) e Fluxo Mensal Detalhado (nominal), com exportação em PDF.',
+  'Módulo de relatórios: Central de Regulação de Vagas e Fluxo Mensal Detalhado (nominal), com exportação em PDF.',
   'Administração de Usuários com criação via Admin API, RBAC, prontuário funcional e auditoria completa.',
   'Consulta Judiciária com mascaramento de dados sensíveis, justificativa obrigatória e protocolo de auditoria.',
   'Encarregado pelo Tratamento de Dados (DPO) configurável e canal de requisições LGPD (Art. 41).',
