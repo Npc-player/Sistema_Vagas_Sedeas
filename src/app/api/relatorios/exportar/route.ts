@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
 
   try {
     if (
+      tipoRelatorio === 'CENTRAL' ||
       tipoRelatorio === 'CENTRAL_INSTITUCIONAL' ||
       tipoRelatorio === 'CENTRAL_PROVISAO'
     ) {

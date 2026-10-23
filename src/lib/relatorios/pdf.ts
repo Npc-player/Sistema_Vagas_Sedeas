@@ -63,6 +63,22 @@ export interface DadosPDFFluxo extends DadosPDFBase {
 export type DadosPDF = DadosPDFCentral | DadosPDFFluxo;
 
 // =====================================================
+// Leitura segura das dimensões da imagem
+// =====================================================
+function medirImagem(
+  doc: PDFKit.PDFDocument,
+  caminho: string
+): { largura: number; altura: number } | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const img = (doc as any).openImage(caminho);
+    return { largura: img.width as number, altura: img.height as number };
+  } catch {
+    return null;
+  }
+}
+
+// =====================================================
 // Layout helpers
 // =====================================================
 interface Layout {
@@ -77,10 +93,12 @@ function desenharLayoutPortrait(doc: PDFKit.PDFDocument): Layout {
     /* ignora */
   }
 
-  const hCab = 90;
-  try {
+  let hCab = 70;
+  const dimCab = medirImagem(doc, CAMINHO_CABECALHO);
+  if (dimCab && dimCab.largura > 0) {
+    hCab = (dimCab.altura / dimCab.largura) * PAGE_WIDTH;
     doc.image(CAMINHO_CABECALHO, 0, 0, { width: PAGE_WIDTH });
-  } catch {
+  } else {
     doc
       .fillColor('#0F766E')
       .fontSize(10)
@@ -90,16 +108,16 @@ function desenharLayoutPortrait(doc: PDFKit.PDFDocument): Layout {
       });
   }
 
-  const hRod = 40;
-  try {
+  let hRod = 50;
+  const dimRod = medirImagem(doc, CAMINHO_RODAPE);
+  if (dimRod && dimRod.largura > 0) {
+    hRod = (dimRod.altura / dimRod.largura) * PAGE_WIDTH;
     doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT - hRod, { width: PAGE_WIDTH });
-  } catch {
-    /* ignora */
   }
 
   return {
-    contentTop: hCab + 20,
-    contentBottom: PAGE_HEIGHT - hRod - 10,
+    contentTop: hCab + 10,
+    contentBottom: PAGE_HEIGHT - hRod - 15,
   };
 }
 
@@ -113,25 +131,23 @@ function desenharLayoutLandscape(doc: PDFKit.PDFDocument): Layout {
     /* ignora */
   }
 
-  const hCabL = 55;
-  try {
+  let hCab = 50;
+  const dimCab = medirImagem(doc, CAMINHO_CABECALHO);
+  if (dimCab && dimCab.largura > 0) {
+    hCab = (dimCab.altura / dimCab.largura) * PAGE_WIDTH_L;
     doc.image(CAMINHO_CABECALHO, 0, 0, { width: PAGE_WIDTH_L });
-  } catch {
-    /* ignora */
   }
 
-  const hRodL = 40;
-  try {
-    doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT_L - hRodL, {
-      width: PAGE_WIDTH_L,
-    });
-  } catch {
-    /* ignora */
+  let hRod = 35;
+  const dimRod = medirImagem(doc, CAMINHO_RODAPE);
+  if (dimRod && dimRod.largura > 0) {
+    hRod = (dimRod.altura / dimRod.largura) * PAGE_WIDTH_L;
+    doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT_L - hRod, { width: PAGE_WIDTH_L });
   }
 
   return {
-    contentTop: hCabL + 20,
-    contentBottom: PAGE_HEIGHT_L - hRodL - 10,
+    contentTop: hCab + 10,
+    contentBottom: PAGE_HEIGHT_L - hRod - 15,
   };
 }
 
@@ -313,7 +329,6 @@ function desenharTabelaCentral(
         .lineTo(MARGIN_X + cols[i].x, yG + hGrupo)
         .stroke();
     }
-    // Separador horizontal entre PROV e DEF (a partir da coluna 2)
     doc
       .moveTo(MARGIN_X + cols[1].x, yG + hRow)
       .lineTo(MARGIN_X + CONTENT_WIDTH, yG + hRow)
@@ -322,7 +337,6 @@ function desenharTabelaCentral(
     const prov = grupo.provisorio;
     const def = grupo.definitivo;
 
-    // UNIDADE (mesclada verticalmente)
     doc.fillColor('#000000').fontSize(7).font('Helvetica');
     const alturaU = doc.heightOfString(grupo.unidadeNome, {
       width: cols[0].w - 4,
@@ -334,7 +348,6 @@ function desenharTabelaCentral(
       { width: cols[0].w - 4, align: 'left', lineBreak: true }
     );
 
-    // Linha PROVISÓRIAS
     const yP = yG + (hRow - 8) / 2;
     doc.fontSize(6.5).font('Helvetica').fillColor('#000000');
     doc.text('PROVISÓRIAS', MARGIN_X + cols[1].x + 2, yP, {
@@ -376,7 +389,6 @@ function desenharTabelaCentral(
         );
     }
 
-    // Linha DEFINITIVAS
     const yD = yG + hRow + (hRow - 8) / 2;
     doc.fontSize(6.5).font('Helvetica').fillColor('#000000');
     doc.text('DEFINITIVAS', MARGIN_X + cols[1].x + 2, yD, {
@@ -410,7 +422,6 @@ function desenharTabelaCentral(
     indice++;
   }
 
-  // ===== TOTAL =====
   if (y + hRow > contentBottom) {
     y = onNovaPagina();
     desenharHeader();
@@ -472,7 +483,7 @@ function desenharTabelaCentral(
 }
 
 // =====================================================
-// PDF Central de Regulação
+// PDF Central de Regulação (cabeçalho original restaurado)
 // =====================================================
 function gerarPDFCentral(dados: DadosPDFCentral): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -504,28 +515,60 @@ function gerarPDFCentral(dados: DadosPDFCentral): Promise<Buffer> {
       layout = desenharLayoutPortrait(doc);
       let y = layout.contentTop;
 
+      // ===== Cabeçalho institucional (restaurado) =====
       doc
-        .fillColor('#000000')
+        .fillColor('#0F172A')
+        .fontSize(9)
+        .font('Helvetica-Bold')
+        .text('DEPARTAMENTO DE PROTEÇÃO SOCIAL ESPECIAL', MARGIN_X, y, {
+          width: CONTENT_WIDTH,
+          align: 'center',
+        });
+      y += 14;
+
+      doc
+        .fillColor('#0F766E')
         .fontSize(11)
         .font('Helvetica-Bold')
-        .text('Serviços de Acolhimento Institucional', MARGIN_X, y, {
+        .text('CENTRAL DE REGULAÇÃO DE VAGAS', MARGIN_X, y, {
           width: CONTENT_WIDTH,
+          align: 'center',
         });
-      y += 16;
+      y += 14;
 
+      doc
+        .fillColor('#0F172A')
+        .fontSize(8.5)
+        .font('Helvetica-Bold')
+        .text(
+          'SERVIÇOS DE ACOLHIMENTO INSTITUCIONAL PARA CRIANÇAS, ADOLESCENTES E JOVENS DO MUNICÍPIO',
+          MARGIN_X,
+          y,
+          { width: CONTENT_WIDTH, align: 'center' }
+        );
+      y += 18;
+
+      // Metadados
       doc.fillColor('#475569').fontSize(7.5).font('Helvetica');
+      doc.text(`Período: ${dados.periodoLabel}`, MARGIN_X, y, {
+        width: CONTENT_WIDTH,
+        align: 'center',
+      });
+      y += 10;
       doc.text(
-        `Período: ${dados.periodoLabel} · Protocolo: ${dados.protocolo} · Gerado em ${new Date().toLocaleString('pt-BR')}`,
+        `Protocolo: ${dados.protocolo} · Gerado em ${new Date().toLocaleString('pt-BR')}`,
         MARGIN_X,
         y,
-        { width: CONTENT_WIDTH }
+        { width: CONTENT_WIDTH, align: 'center' }
       );
       y += 10;
       doc.text(`Responsável: ${textoResponsavel(dados)}`, MARGIN_X, y, {
         width: CONTENT_WIDTH,
+        align: 'center',
       });
       y += 16;
 
+      // Tabela
       const grupos = agruparPorUnidade(dados.linhas);
       y = desenharTabelaCentral(
         doc,
@@ -563,7 +606,7 @@ function gerarPDFCentral(dados: DadosPDFCentral): Promise<Buffer> {
 }
 
 // =====================================================
-// PDF Fluxo Detalhado
+// PDF Fluxo Detalhado (INALTERADO)
 // =====================================================
 function gerarPDFFluxo(dados: DadosPDFFluxo): Promise<Buffer> {
   return new Promise((resolve, reject) => {

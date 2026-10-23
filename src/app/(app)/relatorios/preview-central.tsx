@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
+import { Fragment } from 'react';
 
 interface GrupoUnidade {
   unidadeId: string;
@@ -131,9 +132,9 @@ export function PreviewCentral({ linhas }: PreviewCentralProps) {
                 const prov = g.provisorio;
                 const def = g.definitivo;
                 return (
-                  <>
+                  <Fragment key={g.unidadeId}>
                     {/* Linha PROVISÓRIAS */}
-                    <tr key={`${g.unidadeId}-prov`} className={bg}>
+                    <tr className={bg}>
                       <td
                         rowSpan={2}
                         className={`border border-black px-2 py-1 text-left align-middle font-medium text-slate-900 ${bg}`}
@@ -226,7 +227,7 @@ export function PreviewCentral({ linhas }: PreviewCentralProps) {
                         —
                       </td>
                     </tr>
-                  </>
+                  </Fragment>
                 );
               })}
 
