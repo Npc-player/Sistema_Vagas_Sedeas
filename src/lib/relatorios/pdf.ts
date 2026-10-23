@@ -7,31 +7,20 @@ import type {
   LinhaCentralRegulacao,
   LinhaFluxoDetalhado,
 } from './queries';
-import { calcularTotais } from './queries';
 
-// =====================================================
-// Constantes
-// =====================================================
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
 const MARGIN_X = 35;
 const CONTENT_WIDTH = PAGE_WIDTH - 2 * MARGIN_X;
 
-// Landscape
 const PAGE_WIDTH_L = 841.89;
 const PAGE_HEIGHT_L = 595.28;
 const MARGIN_X_L = 25;
 const CONTENT_WIDTH_L = PAGE_WIDTH_L - 2 * MARGIN_X_L;
 
-const CAMINHO_CABECALHO = path.join(
-  process.cwd(), 'public', 'relatorios', 'cabecalho.jpg'
-);
-const CAMINHO_CORPO = path.join(
-  process.cwd(), 'public', 'relatorios', 'corpo.jpg'
-);
-const CAMINHO_RODAPE = path.join(
-  process.cwd(), 'public', 'relatorios', 'rodape.jpg'
-);
+const CAMINHO_CABECALHO = path.join(process.cwd(), 'public', 'relatorios', 'cabecalho.jpg');
+const CAMINHO_CORPO = path.join(process.cwd(), 'public', 'relatorios', 'corpo.jpg');
+const CAMINHO_RODAPE = path.join(process.cwd(), 'public', 'relatorios', 'rodape.jpg');
 
 const LABEL_MOTIVO: Record<string, string> = {
   VULNERABILIDADE_SOCIAL: 'Vulnerab. social',
@@ -51,7 +40,7 @@ const LABEL_REGIME: Record<string, string> = {
 };
 
 // =====================================================
-// Tipos
+// Tipos públicos
 // =====================================================
 export interface DadosPDFBase {
   protocolo: string;
@@ -63,8 +52,7 @@ export interface DadosPDFBase {
 
 export interface DadosPDFCentral extends DadosPDFBase {
   tipo: 'CENTRAL';
-  linhasInstitucional: LinhaCentralRegulacao[];
-  linhasProvisorio: LinhaCentralRegulacao[];
+  linhas: LinhaCentralRegulacao[];
 }
 
 export interface DadosPDFFluxo extends DadosPDFBase {
@@ -75,46 +63,24 @@ export interface DadosPDFFluxo extends DadosPDFBase {
 export type DadosPDF = DadosPDFCentral | DadosPDFFluxo;
 
 // =====================================================
-// Helpers de layout
+// Layout helpers
 // =====================================================
 interface Layout {
   contentTop: number;
   contentBottom: number;
-  hCabecalho: number;
-  hRodape: number;
-}
-
-function medirImagem(doc: PDFKit.PDFDocument, caminho: string) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const img = (doc as any).openImage(caminho);
-    return {
-      largura: img.width as number,
-      altura: img.height as number,
-    };
-  } catch {
-    return null;
-  }
 }
 
 function desenharLayoutPortrait(doc: PDFKit.PDFDocument): Layout {
-  // Corpo de fundo
   try {
-    doc.image(CAMINHO_CORPO, 0, 0, {
-      width: PAGE_WIDTH,
-      height: PAGE_HEIGHT,
-    });
+    doc.image(CAMINHO_CORPO, 0, 0, { width: PAGE_WIDTH, height: PAGE_HEIGHT });
   } catch {
-    // ignora
+    /* ignora */
   }
 
-  // Cabeçalho — usa altura natural da imagem
-  let hCabecalho = 90;
-  const dimCab = medirImagem(doc, CAMINHO_CABECALHO);
-  if (dimCab) {
-    hCabecalho = (dimCab.altura / dimCab.largura) * PAGE_WIDTH;
+  const hCab = 90;
+  try {
     doc.image(CAMINHO_CABECALHO, 0, 0, { width: PAGE_WIDTH });
-  } else {
+  } catch {
     doc
       .fillColor('#0F766E')
       .fontSize(10)
@@ -124,21 +90,16 @@ function desenharLayoutPortrait(doc: PDFKit.PDFDocument): Layout {
       });
   }
 
-  // Rodapé — usa altura natural da imagem, ancorado no fim
-  let hRodape = 50;
-  const dimRod = medirImagem(doc, CAMINHO_RODAPE);
-  if (dimRod) {
-    hRodape = (dimRod.altura / dimRod.largura) * PAGE_WIDTH;
-    doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT - hRodape, {
-      width: PAGE_WIDTH,
-    });
+  const hRod = 40;
+  try {
+    doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT - hRod, { width: PAGE_WIDTH });
+  } catch {
+    /* ignora */
   }
 
   return {
-    contentTop: hCabecalho + 30, // 30pt = ~2 linhas de espaço abaixo do cabeçalho
-    contentBottom: PAGE_HEIGHT - hRodape - 10,
-    hCabecalho,
-    hRodape,
+    contentTop: hCab + 20,
+    contentBottom: PAGE_HEIGHT - hRod - 10,
   };
 }
 
@@ -149,30 +110,28 @@ function desenharLayoutLandscape(doc: PDFKit.PDFDocument): Layout {
       height: PAGE_HEIGHT_L,
     });
   } catch {
-    // ignora
+    /* ignora */
   }
 
-  let hCabecalho = 55;
-  const dimCab = medirImagem(doc, CAMINHO_CABECALHO);
-  if (dimCab) {
-    hCabecalho = (dimCab.altura / dimCab.largura) * PAGE_WIDTH_L;
+  const hCabL = 55;
+  try {
     doc.image(CAMINHO_CABECALHO, 0, 0, { width: PAGE_WIDTH_L });
+  } catch {
+    /* ignora */
   }
 
-  let hRodape = 40;
-  const dimRod = medirImagem(doc, CAMINHO_RODAPE);
-  if (dimRod) {
-    hRodape = (dimRod.altura / dimRod.largura) * PAGE_WIDTH_L;
-    doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT_L - hRodape, {
+  const hRodL = 40;
+  try {
+    doc.image(CAMINHO_RODAPE, 0, PAGE_HEIGHT_L - hRodL, {
       width: PAGE_WIDTH_L,
     });
+  } catch {
+    /* ignora */
   }
 
   return {
-    contentTop: hCabecalho + 20,
-    contentBottom: PAGE_HEIGHT_L - hRodape - 10,
-    hCabecalho,
-    hRodape,
+    contentTop: hCabL + 20,
+    contentBottom: PAGE_HEIGHT_L - hRodL - 10,
   };
 }
 
@@ -206,42 +165,125 @@ function textoResponsavel(d: DadosPDFBase): string {
 }
 
 // =====================================================
-// Tabela da Central
+// Agrupamento por unidade
+// =====================================================
+interface GrupoUnidade {
+  unidadeId: string;
+  unidadeNome: string;
+  unidadeTipo: string;
+  provisorio: LinhaCentralRegulacao | null;
+  definitivo: LinhaCentralRegulacao | null;
+}
+
+function agruparPorUnidade(linhas: LinhaCentralRegulacao[]): GrupoUnidade[] {
+  const map = new Map<string, GrupoUnidade>();
+  for (const l of linhas) {
+    let g = map.get(l.unidadeId);
+    if (!g) {
+      g = {
+        unidadeId: l.unidadeId,
+        unidadeNome: l.unidadeNome,
+        unidadeTipo: l.unidadeTipo,
+        provisorio: null,
+        definitivo: null,
+      };
+      map.set(l.unidadeId, g);
+    }
+    if (l.tipoVaga === 'PROVISORIO') g.provisorio = l;
+    else g.definitivo = l;
+  }
+  return Array.from(map.values());
+}
+
+interface TotaisCentral {
+  meta: number;
+  entradas: number;
+  saidas: number;
+  evasoesOutros: number;
+  acolhidos: number;
+  fixos: number;
+  vagasDisponiveis: number;
+}
+
+function calcularTotaisGrupos(grupos: GrupoUnidade[]): TotaisCentral {
+  const acc: TotaisCentral = {
+    meta: 0,
+    entradas: 0,
+    saidas: 0,
+    evasoesOutros: 0,
+    acolhidos: 0,
+    fixos: 0,
+    vagasDisponiveis: 0,
+  };
+  for (const g of grupos) {
+    for (const l of [g.provisorio, g.definitivo]) {
+      if (!l) continue;
+      acc.meta += l.meta ?? 0;
+      acc.entradas += l.entradas;
+      acc.saidas += l.saidas;
+      acc.evasoesOutros += l.evasoesOutros;
+      acc.acolhidos += l.acolhidos;
+      acc.fixos += l.fixos;
+      acc.vagasDisponiveis += l.vagasDisponiveis ?? 0;
+    }
+  }
+  return acc;
+}
+
+// =====================================================
+// Tabela da Central (nova estrutura com mesclagem)
 // =====================================================
 function desenharTabelaCentral(
   doc: PDFKit.PDFDocument,
   yInicial: number,
   contentBottom: number,
-  linhas: LinhaCentralRegulacao[],
+  grupos: GrupoUnidade[],
   onNovaPagina: () => number
 ): number {
   let y = yInicial;
 
-  const cols = [
-    { label: 'UNIDADE', x: 0, w: 140, align: 'left', key: 'unidade' },
-    { label: 'META\nCONVENIADA', x: 140, w: 55, align: 'center', key: 'meta' },
-    { label: 'ENTRADAS', x: 195, w: 42, align: 'center', key: 'entradas' },
-    { label: 'SAÍDAS', x: 237, w: 40, align: 'center', key: 'saidas' },
-    { label: 'EVASÕES/\nOUTROS', x: 277, w: 55, align: 'center', key: 'evasoes' },
-    { label: 'ACOLHIDOS', x: 332, w: 45, align: 'center', key: 'acolhidos' },
-    { label: 'PERMANECENTES', x: 377, w: 65, align: 'center', key: 'perm' },
-    { label: 'VAGAS\nDISPONÍVEIS', x: 442, w: 83, align: 'center', key: 'vagas' },
-  ] as const;
+  const colRatios = [
+    { key: 'unidade', label: 'UNIDADE', ratio: 0.303, align: 'left' as const },
+    { key: 'tipo', label: 'TIPOS\nDE VAGAS', ratio: 0.109, align: 'left' as const },
+    { key: 'meta', label: 'META', ratio: 0.059, align: 'center' as const },
+    { key: 'entradas', label: 'ENTRADAS', ratio: 0.086, align: 'center' as const },
+    { key: 'saidas', label: 'SAÍDAS', ratio: 0.072, align: 'center' as const },
+    { key: 'evasoes', label: 'EVASÕES\nOUTROS', ratio: 0.090, align: 'center' as const },
+    { key: 'acolhidos', label: 'ACOLHIDOS', ratio: 0.098, align: 'center' as const },
+    { key: 'fixos', label: 'FIXOS', ratio: 0.073, align: 'center' as const },
+    { key: 'vagas', label: 'VAGAS\nDISPONÍVEIS', ratio: 0.110, align: 'center' as const },
+  ];
+
+  let accX = 0;
+  const cols = colRatios.map((c) => {
+    const col = { ...c, x: accX, w: c.ratio * CONTENT_WIDTH };
+    accX += col.w;
+    return col;
+  });
+
+  const hHeader = 30;
+  const hRow = 18;
+  const COR_VERDE = '#E8F5E9';
+  const COR_BRANCO = '#FFFFFF';
 
   const desenharHeader = () => {
-    const hHeader = 24;
-    doc
-      .fillColor('#0F766E')
-      .rect(MARGIN_X, y, CONTENT_WIDTH, hHeader)
-      .fill();
-    doc.fillColor('#FFFFFF').fontSize(6.5).font('Helvetica-Bold');
+    doc.fillColor(COR_BRANCO).rect(MARGIN_X, y, CONTENT_WIDTH, hHeader).fill();
+    doc.strokeColor('#000000').lineWidth(0.5);
+    doc.rect(MARGIN_X, y, CONTENT_WIDTH, hHeader).stroke();
+    for (let i = 1; i < cols.length; i++) {
+      doc
+        .moveTo(MARGIN_X + cols[i].x, y)
+        .lineTo(MARGIN_X + cols[i].x, y + hHeader)
+        .stroke();
+    }
+    doc.fillColor('#000000').fontSize(6.5).font('Helvetica-Bold');
     for (const c of cols) {
-      const alturaTexto = doc.heightOfString(c.label, {
+      const altura = doc.heightOfString(c.label, {
         width: c.w - 4,
         align: c.align,
       });
-      const yTexto = y + Math.max(2, (hHeader - alturaTexto) / 2);
-      doc.text(c.label, MARGIN_X + c.x + 2, yTexto, {
+      const yText = y + Math.max(2, (hHeader - altura) / 2);
+      doc.text(c.label, MARGIN_X + c.x + 2, yText, {
         width: c.w - 4,
         align: c.align,
         lineBreak: true,
@@ -252,80 +294,185 @@ function desenharTabelaCentral(
 
   desenharHeader();
 
-  const totais = calcularTotais(linhas);
-
-  const desenharLinha = (
-    valores: Record<string, string>,
-    negrito = false
-  ) => {
-    if (y + 18 > contentBottom) {
+  let indice = 0;
+  for (const grupo of grupos) {
+    const hGrupo = hRow * 2;
+    if (y + hGrupo > contentBottom) {
       y = onNovaPagina();
       desenharHeader();
     }
+    const yG = y;
+    const bg = indice % 2 === 0 ? COR_VERDE : COR_BRANCO;
 
-    if (negrito) {
+    doc.fillColor(bg).rect(MARGIN_X, yG, CONTENT_WIDTH, hGrupo).fill();
+    doc.strokeColor('#000000').lineWidth(0.5);
+    doc.rect(MARGIN_X, yG, CONTENT_WIDTH, hGrupo).stroke();
+    for (let i = 1; i < cols.length; i++) {
       doc
-        .fillColor('#F1F5F9')
-        .rect(MARGIN_X, y, CONTENT_WIDTH, 18)
-        .fill();
+        .moveTo(MARGIN_X + cols[i].x, yG)
+        .lineTo(MARGIN_X + cols[i].x, yG + hGrupo)
+        .stroke();
     }
+    // Separador horizontal entre PROV e DEF (a partir da coluna 2)
     doc
-      .fillColor('#0F172A')
-      .font(negrito ? 'Helvetica-Bold' : 'Helvetica')
-      .fontSize(7.5);
+      .moveTo(MARGIN_X + cols[1].x, yG + hRow)
+      .lineTo(MARGIN_X + CONTENT_WIDTH, yG + hRow)
+      .stroke();
 
-    for (const c of cols) {
-      const texto = valores[c.key] ?? '';
-      doc.text(texto, MARGIN_X + c.x + 2, y + 6, {
-        width: c.w - 4,
-        align: c.align,
-        lineBreak: false,
-        ellipsis: true,
+    const prov = grupo.provisorio;
+    const def = grupo.definitivo;
+
+    // UNIDADE (mesclada verticalmente)
+    doc.fillColor('#000000').fontSize(7).font('Helvetica');
+    const alturaU = doc.heightOfString(grupo.unidadeNome, {
+      width: cols[0].w - 4,
+    });
+    doc.text(
+      grupo.unidadeNome,
+      MARGIN_X + cols[0].x + 2,
+      yG + (hGrupo - alturaU) / 2,
+      { width: cols[0].w - 4, align: 'left', lineBreak: true }
+    );
+
+    // Linha PROVISÓRIAS
+    const yP = yG + (hRow - 8) / 2;
+    doc.fontSize(6.5).font('Helvetica').fillColor('#000000');
+    doc.text('PROVISÓRIAS', MARGIN_X + cols[1].x + 2, yP, {
+      width: cols[1].w - 4,
+      align: 'left',
+    });
+    if (prov) {
+      if (prov.meta !== null)
+        doc.text(String(prov.meta), MARGIN_X + cols[2].x + 2, yP, {
+          width: cols[2].w - 4,
+          align: 'center',
+        });
+      doc.text(String(prov.entradas), MARGIN_X + cols[3].x + 2, yP, {
+        width: cols[3].w - 4,
+        align: 'center',
+      });
+      doc.text(String(prov.saidas), MARGIN_X + cols[4].x + 2, yP, {
+        width: cols[4].w - 4,
+        align: 'center',
+      });
+      doc.text(String(prov.evasoesOutros), MARGIN_X + cols[5].x + 2, yP, {
+        width: cols[5].w - 4,
+        align: 'center',
+      });
+      doc.text(String(prov.acolhidos), MARGIN_X + cols[6].x + 2, yP, {
+        width: cols[6].w - 4,
+        align: 'center',
+      });
+      doc.text(String(prov.fixos), MARGIN_X + cols[7].x + 2, yP, {
+        width: cols[7].w - 4,
+        align: 'center',
+      });
+      if (prov.vagasDisponiveis !== null)
+        doc.text(
+          String(prov.vagasDisponiveis),
+          MARGIN_X + cols[8].x + 2,
+          yP,
+          { width: cols[8].w - 4, align: 'center' }
+        );
+    }
+
+    // Linha DEFINITIVAS
+    const yD = yG + hRow + (hRow - 8) / 2;
+    doc.fontSize(6.5).font('Helvetica').fillColor('#000000');
+    doc.text('DEFINITIVAS', MARGIN_X + cols[1].x + 2, yD, {
+      width: cols[1].w - 4,
+      align: 'left',
+    });
+    if (def) {
+      doc.text(String(def.entradas), MARGIN_X + cols[3].x + 2, yD, {
+        width: cols[3].w - 4,
+        align: 'center',
+      });
+      doc.text(String(def.saidas), MARGIN_X + cols[4].x + 2, yD, {
+        width: cols[4].w - 4,
+        align: 'center',
+      });
+      doc.text(String(def.evasoesOutros), MARGIN_X + cols[5].x + 2, yD, {
+        width: cols[5].w - 4,
+        align: 'center',
+      });
+      doc.text(String(def.acolhidos), MARGIN_X + cols[6].x + 2, yD, {
+        width: cols[6].w - 4,
+        align: 'center',
+      });
+      doc.text(String(def.fixos), MARGIN_X + cols[7].x + 2, yD, {
+        width: cols[7].w - 4,
+        align: 'center',
       });
     }
 
-    y += 18;
-    doc
-      .strokeColor('#E2E8F0')
-      .lineWidth(0.3)
-      .moveTo(MARGIN_X, y)
-      .lineTo(MARGIN_X + CONTENT_WIDTH, y)
-      .stroke();
-  };
-
-  for (const l of linhas) {
-    desenharLinha({
-      unidade: l.unidadeNome,
-      meta: String(l.metaConveniada),
-      entradas: String(l.entradas),
-      saidas: String(l.saidas),
-      evasoes: String(l.evasoesOutros),
-      acolhidos: String(l.acolhidos),
-      perm: String(l.permanecentes),
-      vagas: String(l.vagasDisponiveis),
-    });
+    y += hGrupo;
+    indice++;
   }
 
-  // Linha de total
-  desenharLinha(
-    {
-      unidade: 'TOTAL',
-      meta: String(totais.metaConveniada),
-      entradas: String(totais.entradas),
-      saidas: String(totais.saidas),
-      evasoes: String(totais.evasoesOutros),
-      acolhidos: String(totais.acolhidos),
-      perm: String(totais.permanecentes),
-      vagas: String(totais.vagasDisponiveis),
-    },
-    true
-  );
+  // ===== TOTAL =====
+  if (y + hRow > contentBottom) {
+    y = onNovaPagina();
+    desenharHeader();
+  }
 
+  const tot = calcularTotaisGrupos(grupos);
+
+  doc.fillColor(COR_BRANCO).rect(MARGIN_X, y, CONTENT_WIDTH, hRow).fill();
+  doc.strokeColor('#000000').lineWidth(0.5);
+  doc.rect(MARGIN_X, y, CONTENT_WIDTH, hRow).stroke();
+  for (let i = 1; i < cols.length; i++) {
+    doc
+      .moveTo(MARGIN_X + cols[i].x, y)
+      .lineTo(MARGIN_X + cols[i].x, y + hRow)
+      .stroke();
+  }
+
+  const yT = y + (hRow - 8) / 2;
+  doc.fillColor('#000000').fontSize(7).font('Helvetica-Bold');
+  doc.text('TOTAL', MARGIN_X + cols[0].x + 2, yT, {
+    width: cols[0].w - 4,
+    align: 'left',
+  });
+  doc.text('—', MARGIN_X + cols[1].x + 2, yT, {
+    width: cols[1].w - 4,
+    align: 'left',
+  });
+  doc.text(String(tot.meta), MARGIN_X + cols[2].x + 2, yT, {
+    width: cols[2].w - 4,
+    align: 'center',
+  });
+  doc.text(String(tot.entradas), MARGIN_X + cols[3].x + 2, yT, {
+    width: cols[3].w - 4,
+    align: 'center',
+  });
+  doc.text(String(tot.saidas), MARGIN_X + cols[4].x + 2, yT, {
+    width: cols[4].w - 4,
+    align: 'center',
+  });
+  doc.text(String(tot.evasoesOutros), MARGIN_X + cols[5].x + 2, yT, {
+    width: cols[5].w - 4,
+    align: 'center',
+  });
+  doc.text(String(tot.acolhidos), MARGIN_X + cols[6].x + 2, yT, {
+    width: cols[6].w - 4,
+    align: 'center',
+  });
+  doc.text(String(tot.fixos), MARGIN_X + cols[7].x + 2, yT, {
+    width: cols[7].w - 4,
+    align: 'center',
+  });
+  doc.text(String(tot.vagasDisponiveis), MARGIN_X + cols[8].x + 2, yT, {
+    width: cols[8].w - 4,
+    align: 'center',
+  });
+
+  y += hRow;
   return y;
 }
 
 // =====================================================
-// PDF Central de Regulação (2 tabelas)
+// PDF Central de Regulação
 // =====================================================
 function gerarPDFCentral(dados: DadosPDFCentral): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -357,109 +504,41 @@ function gerarPDFCentral(dados: DadosPDFCentral): Promise<Buffer> {
       layout = desenharLayoutPortrait(doc);
       let y = layout.contentTop;
 
-      // ===== Cabeçalho institucional =====
       doc
-        .fillColor('#0F172A')
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text('DEPARTAMENTO DE PROTEÇÃO SOCIAL ESPECIAL', MARGIN_X, y, {
-          width: CONTENT_WIDTH,
-          align: 'center',
-        });
-      y += 14;
-
-      doc
-        .fillColor('#0F766E')
+        .fillColor('#000000')
         .fontSize(11)
         .font('Helvetica-Bold')
-        .text('CENTRAL DE REGULAÇÃO DE VAGAS', MARGIN_X, y, {
+        .text('Serviços de Acolhimento Institucional', MARGIN_X, y, {
           width: CONTENT_WIDTH,
-          align: 'center',
         });
-      y += 14;
+      y += 16;
 
-      doc
-        .fillColor('#0F172A')
-        .fontSize(8.5)
-        .font('Helvetica-Bold')
-        .text(
-          'SERVIÇOS DE ACOLHIMENTO INSTITUCIONAL PARA CRIANÇAS, ADOLESCENTES E JOVENS DO MUNICÍPIO',
-          MARGIN_X,
-          y,
-          { width: CONTENT_WIDTH, align: 'center' }
-        );
-      y += 18;
-
-      // Metadados
       doc.fillColor('#475569').fontSize(7.5).font('Helvetica');
-      doc.text(`Período: ${dados.periodoLabel}`, MARGIN_X, y, {
+      doc.text(
+        `Período: ${dados.periodoLabel} · Protocolo: ${dados.protocolo} · Gerado em ${new Date().toLocaleString('pt-BR')}`,
+        MARGIN_X,
+        y,
+        { width: CONTENT_WIDTH }
+      );
+      y += 10;
+      doc.text(`Responsável: ${textoResponsavel(dados)}`, MARGIN_X, y, {
         width: CONTENT_WIDTH,
-        align: 'center',
       });
-      y += 10;
-      doc.text(
-        `Protocolo: ${dados.protocolo} · Gerado em ${new Date().toLocaleString('pt-BR')}`,
-        MARGIN_X,
-        y,
-        { width: CONTENT_WIDTH, align: 'center' }
-      );
-      y += 10;
-      doc.text(
-        `Responsável: ${textoResponsavel(dados)}`,
-        MARGIN_X,
-        y,
-        { width: CONTENT_WIDTH, align: 'center' }
-      );
-      y += 20;
+      y += 16;
 
-      // ===== Tabela 1: Institucional =====
-      doc
-        .fillColor('#0F172A')
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text('Serviços de Acolhimento Institucional', MARGIN_X, y);
-      y += 14;
-
+      const grupos = agruparPorUnidade(dados.linhas);
       y = desenharTabelaCentral(
         doc,
         y,
         layout.contentBottom,
-        dados.linhasInstitucional,
-        novaPagina
-      );
-      y += 20;
-
-      // ===== Tabela 2: Provisório =====
-      // Se não couber, nova página
-      if (y + 40 > layout.contentBottom) {
-        y = novaPagina();
-      }
-
-      doc
-        .fillColor('#0F172A')
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text(
-          'Serviço de Acolhimento Institucional Provisório',
-          MARGIN_X,
-          y
-        );
-      y += 14;
-
-      y = desenharTabelaCentral(
-        doc,
-        y,
-        layout.contentBottom,
-        dados.linhasProvisorio,
+        grupos,
         novaPagina
       );
       y += 16;
 
-      // ===== Notas =====
       if (y + 40 > layout.contentBottom) {
         y = novaPagina();
       }
-
       doc.fillColor('#64748B').fontSize(6.5).font('Helvetica');
       doc.text(
         '* O número de vagas disponíveis será contabilizado de acordo com o número de acolhidos com guia de acolhimento e não com o número de permanecentes.',
@@ -519,7 +598,6 @@ function gerarPDFFluxo(dados: DadosPDFFluxo): Promise<Buffer> {
       layout = desenharLayoutLandscape(doc);
       let y = layout.contentTop;
 
-      // Cabeçalho institucional
       doc
         .fillColor('#0F172A')
         .fontSize(8)
@@ -529,17 +607,14 @@ function gerarPDFFluxo(dados: DadosPDFFluxo): Promise<Buffer> {
           align: 'center',
         });
       y += 12;
-
       doc
         .fillColor('#0F766E')
         .fontSize(10)
         .font('Helvetica-Bold')
-        .text(
-          'FLUXO MENSAL DE ACOLHIMENTO — RELAÇÃO NOMINAL',
-          MX,
-          y,
-          { width: CW, align: 'center' }
-        );
+        .text('FLUXO MENSAL DE ACOLHIMENTO — RELAÇÃO NOMINAL', MX, y, {
+          width: CW,
+          align: 'center',
+        });
       y += 16;
 
       doc.fillColor('#475569').fontSize(7).font('Helvetica');
@@ -556,141 +631,83 @@ function gerarPDFFluxo(dados: DadosPDFFluxo): Promise<Buffer> {
       });
       y += 14;
 
-      // Colunas
       const cols = [
-        { label: 'Nº', x: 0, w: 22, key: 'n' },
-        { label: 'GRUPO DE\nIRMÃOS', x: 22, w: 55, key: 'grupo' },
-        { label: 'NOME / FILIAÇÃO', x: 77, w: 135, key: 'nome' },
-        { label: 'NASCIMENTO', x: 212, w: 55, key: 'nasc' },
-        { label: 'ACOLHIDO\nEM', x: 267, w: 50, key: 'acolh' },
-        { label: 'CPF', x: 317, w: 65, key: 'cpf' },
-        { label: 'MP / GUIA DE\nACOLHIMENTO', x: 382, w: 90, key: 'mp' },
-        { label: 'VARA DA\nINFÂNCIA', x: 472, w: 80, key: 'vara' },
-        { label: 'CREAS', x: 552, w: 75, key: 'creas' },
-        { label: 'MOTIVO /\nREGIME', x: 627, w: 75, key: 'motivo' },
-        { label: 'TERRITÓRIO', x: 702, w: 89, key: 'terr' },
+        { label: 'GRUPO', x: 0, w: 38, key: 'grupo' },
+        { label: 'NOME / FILIAÇÃO', x: 38, w: 130, key: 'nome' },
+        { label: 'NASC.', x: 168, w: 48, key: 'nasc' },
+        { label: 'ACOLH.', x: 216, w: 48, key: 'acolh' },
+        { label: 'DOC.', x: 264, w: 65, key: 'doc' },
+        { label: 'PROCESSO / GUIA', x: 329, w: 85, key: 'proc' },
+        { label: 'TERRITÓRIO', x: 414, w: 70, key: 'terr' },
+        { label: 'EQUIPE TÉCNICA', x: 484, w: 95, key: 'equipe' },
+        { label: 'MOTIVO / REGIME', x: 579, w: 75, key: 'motivo' },
+        { label: 'STATUS', x: 654, w: 127, key: 'status' },
       ] as const;
 
-      // Cabeçalho com 2 linhas (mesclado em EQUIPE TÉCNICA)
       const desenharHeader = () => {
-        const hRow1 = 11; // linha "EQUIPE TÉCNICA"
-        const hRow2 = 18; // demais rótulos
-        const xEquipeInicio = MX + 472;
-        const larguraEquipe = 80 + 75; // VARA + CREAS
-
-        // Faixa 1
-        doc
-          .fillColor('#0F766E')
-          .rect(MX, y, CW, hRow1 + hRow2)
-          .fill();
-
-        // Texto "EQUIPE TÉCNICA" centralizado sobre as 2 colunas
-        doc.fillColor('#FFFFFF').fontSize(6).font('Helvetica-Bold');
-        doc.text('EQUIPE TÉCNICA', xEquipeInicio, y + 3, {
-          width: larguraEquipe,
-          align: 'center',
-          lineBreak: false,
-        });
-
-        // Linha separadora horizontal sob EQUIPE TÉCNICA
-        doc
-          .strokeColor('#0F766E')
-          .lineWidth(0.3)
-          .moveTo(xEquipeInicio, y + hRow1)
-          .lineTo(xEquipeInicio + larguraEquipe, y + hRow1)
-          .stroke();
-
-        // Rótulos da faixa 2
+        doc.fillColor('#0F766E').rect(MX, y, CW, 16).fill();
+        doc.fillColor('#FFFFFF').fontSize(6.5).font('Helvetica-Bold');
         for (const c of cols) {
-          // Pula o cabeçalho "EQUIPE TÉCNICA" (VARA e CREAS recebem rótulo na faixa 2)
-          const textoLabel = c.label.replace(/\n/g, ' ');
-          const altura = doc.heightOfString(textoLabel, {
-            width: c.w - 4,
-            align: 'center',
-          });
-          const yTexto = y + hRow1 + Math.max(2, (hRow2 - altura) / 2);
-          doc.text(textoLabel, MX + c.x + 2, yTexto, {
-            width: c.w - 4,
-            align: 'center',
-            lineBreak: true,
+          doc.text(c.label, MX + c.x + 3, y + 5, {
+            width: c.w - 6,
+            lineBreak: false,
           });
         }
-
-        y += hRow1 + hRow2;
+        y += 16;
       };
 
       desenharHeader();
-      doc.font('Helvetica').fontSize(6).fillColor('#0F172A');
-
-      let contador = 0;
+      doc.font('Helvetica').fontSize(6.5).fillColor('#0F172A');
 
       for (const l of dados.linhas) {
-        const alturaLinha = 32;
+        const alturaLinha = 22;
         if (y + alturaLinha > layout.contentBottom) {
           y = novaPagina();
           desenharHeader();
-          doc.font('Helvetica').fontSize(6).fillColor('#0F172A');
+          doc.font('Helvetica').fontSize(6.5).fillColor('#0F172A');
         }
-
-        // Fundo destacado para irmãos (todas as linhas do grupo)
-        if (l.grupoIrmaos) {
-          doc
-            .fillColor('#F0FDFA')
-            .rect(MX, y, CW, alturaLinha)
-            .fill();
+        if (l.grupoFamiliar) {
+          doc.fillColor('#F0FDFA').rect(MX, y, CW, alturaLinha).fill();
         }
-
-        contador++;
-
-        // Prefixo "A.S.:" e "Psic.:" na equipe
-        const varaTexto = l.asVaraInfancia
-          ? `A.S.: ${l.asVaraInfancia}${l.psicVaraInfancia ? `\nPsic.: ${l.psicVaraInfancia}` : ''}`
-          : l.psicVaraInfancia
-            ? `Psic.: ${l.psicVaraInfancia}`
-            : '—';
-
-        const creasTexto =
-          l.asCreas || l.psicCreas
-            ? [
-                l.asCreas ? `A.S.: ${l.asCreas}` : '',
-                l.psicCreas ? `Psic.: ${l.psicCreas}` : '',
-              ]
-                .filter(Boolean)
-                .join('\n')
-            : '—';
-
         const valores: Record<string, string> = {
-          n: String(contador),
-          grupo: l.grupoIrmaos ?? '—',
-          nome:
-            l.nomeCompleto + (l.nomeMae ? `\nMãe: ${l.nomeMae}` : ''),
+          grupo: l.grupoFamiliar ?? '—',
+          nome: l.nomeCompleto + (l.nomeMae ? `\nMãe: ${l.nomeMae}` : ''),
           nasc: `${formatarDataBR(l.dataNascimento)}\n${l.idade} anos`,
           acolh: formatarDataBR(l.dataAcolhimento),
-          cpf: l.cpf ?? '—',
-          mp:
+          doc:
+            [l.cpf ? `CPF: ${l.cpf}` : '', l.rg ? `RG: ${l.rg}` : '']
+              .filter(Boolean)
+              .join('\n') || '—',
+          proc:
             [
+              l.numeroProcesso ? `Proc: ${l.numeroProcesso}` : '',
               l.numeroMedidaProtetiva ? `MP: ${l.numeroMedidaProtetiva}` : '',
-              l.numeroGuiaAcolhimento
-                ? `Guia: ${l.numeroGuiaAcolhimento}`
-                : '',
+              l.numeroGuiaAcolhimento ? `Guia: ${l.numeroGuiaAcolhimento}` : '',
             ]
               .filter(Boolean)
               .join('\n') || '—',
-          vara: varaTexto,
-          creas: creasTexto,
-          motivo: `${LABEL_MOTIVO[l.motivo] ?? l.motivo}\n${LABEL_REGIME[l.regime] ?? l.regime}`,
           terr: l.territorio ?? '—',
+          equipe:
+            [
+              l.asVaraInfancia ? `AS Vara: ${l.asVaraInfancia}` : '',
+              l.psicVaraInfancia ? `Psic: ${l.psicVaraInfancia}` : '',
+              l.asCreas ? `AS CREAS: ${l.asCreas}` : '',
+            ]
+              .filter(Boolean)
+              .join('\n') || '—',
+          motivo: `${LABEL_MOTIVO[l.motivo] ?? l.motivo}\n${LABEL_REGIME[l.regime] ?? l.regime}`,
+          status: l.ativo
+            ? 'ATIVO'
+            : `${l.situacaoEspecial ? l.situacaoEspecial + ' — ' : ''}ENCERRADO\n${formatarDataBR(l.dataDesacolhimento ?? '')}`,
         };
-
         for (const c of cols) {
           doc.fillColor('#0F172A');
-          doc.text(valores[c.key] ?? '', MX + c.x + 2, y + 3, {
-            width: c.w - 4,
-            align: c.key === 'n' || c.key === 'grupo' ? 'center' : 'left',
+          doc.text(valores[c.key] ?? '', MX + c.x + 3, y + 3, {
+            width: c.w - 6,
+            height: alturaLinha - 4,
             lineBreak: true,
           });
         }
-
         y += alturaLinha;
         doc
           .strokeColor('#E2E8F0')

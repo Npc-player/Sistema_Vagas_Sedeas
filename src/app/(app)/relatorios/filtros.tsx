@@ -27,8 +27,7 @@ interface FiltrosRelatorioProps {
 }
 
 const TIPOS_RELATORIO = [
-  { value: 'CENTRAL_INSTITUCIONAL', label: 'Central de Regulação — Institucional' },
-  { value: 'CENTRAL_PROVISAO', label: 'Central de Regulação — Provisório' },
+  { value: 'CENTRAL', label: 'Central de Regulação de Vagas' },
   { value: 'FLUXO_DETALHADO', label: 'Fluxo Mensal Detalhado (nominal)' },
 ];
 
@@ -55,7 +54,7 @@ export function FiltrosRelatorio({ unidades }: FiltrosRelatorioProps) {
     .split('T')[0];
 
   const [tipoRelatorio, setTipoRelatorio] = useState(
-    searchParams.get('tipoRelatorio') ?? 'CENTRAL_INSTITUCIONAL'
+    searchParams.get('tipoRelatorio') ?? 'CENTRAL'
   );
   const [tipoPeriodo, setTipoPeriodo] = useState(
     searchParams.get('tipoPeriodo') ?? 'MENSAL'
@@ -88,7 +87,7 @@ export function FiltrosRelatorio({ unidades }: FiltrosRelatorioProps) {
   }
 
   function limpar() {
-    setTipoRelatorio('CENTRAL_INSTITUCIONAL');
+    setTipoRelatorio('CENTRAL');
     setTipoPeriodo('MENSAL');
     setDataBase(hoje);
     setDataInicio(primeiroDiaMes);

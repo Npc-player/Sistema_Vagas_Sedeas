@@ -13,7 +13,6 @@ import { FiltrosRelatorio, type UnidadeOption } from './filtros';
 import { PreviewCentral } from './preview-central';
 import { PreviewFluxo } from './preview-fluxo';
 import { FileBarChart2 } from 'lucide-react';
-import { BotaoExportarPDF } from './botao-exportar';
 
 interface PageProps {
   searchParams: Promise<{
@@ -30,6 +29,15 @@ function formatarDataBR(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR');
 }
 
+function allRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows: unknown[] }).rows;
+    if (Array.isArray(rows)) return rows as T[];
+  }
+  return [];
+}
+
 export default async function RelatoriosPage({ searchParams }: PageProps) {
   const session = await getSession();
 
@@ -38,20 +46,21 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
 
   const params = await searchParams;
 
-  // Carrega lista de unidades para o filtro
   const unidadesRaw = await db.execute(sql`
     SELECT id, nome, tipo::text AS tipo
     FROM unidades
     WHERE ativo = true
     ORDER BY nome
   `);
-  const unidades = unidadesRaw as unknown as UnidadeOption[];
+  const unidades = allRows<UnidadeOption>(unidadesRaw);
 
-  // Se não houver parâmetros, não gera relatório (mostra só o filtro)
   const temParametros =
     params.tipoRelatorio && params.tipoPeriodo && params.dataBase;
 
-  const tipoRelatorio = params.tipoRelatorio ?? 'CENTRAL_INSTITUCIONAL';
+  // Aceita 'CENTRAL' ou o legado 'CENTRAL_INSTITUCIONAL' — ambos usam a mesma tabela
+  const tipoRelatorio =
+    params.tipoRelatorio === 'FLUXO_DETALHADO' ? 'FLUXO_DETALHADO' : 'CENTRAL';
+
   const tipoPeriodo = (params.tipoPeriodo ?? 'MENSAL') as TipoPeriodo;
   const dataBase = params.dataBase ?? new Date().toISOString().split('T')[0];
 
@@ -62,12 +71,10 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
     params.dataFim
   );
 
-  // Título do período
   const labelPeriodo = `${formatarDataBR(periodo.inicio)} a ${formatarDataBR(periodo.fim)}`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Cabeçalho */}
       <div className="mb-6">
         <p className="text-xs font-medium text-teal-700 uppercase tracking-wider mb-1">
           Relatórios
@@ -82,46 +89,32 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      {/* Filtros */}
       <FiltrosRelatorio unidades={unidades} />
 
-      {/* Conteúdo */}
       {temParametros ? (
         <>
-          {/* Identificação do relatório */}
-          <div className="mb-4 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <div>
-                <span className="text-slate-500">Período:</span>{' '}
-                <strong className="text-slate-900">{labelPeriodo}</strong>
-              </div>
-              <div>
-                <span className="text-slate-500">Tipo:</span>{' '}
-                <strong className="text-slate-900">
-                  {tipoPeriodo === 'PERSONALIZADO'
-                    ? 'Personalizado'
-                    : tipoPeriodo.charAt(0) +
-                      tipoPeriodo.slice(1).toLowerCase()}
-                </strong>
-              </div>
+          <div className="mb-4 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <div>
+              <span className="text-slate-500">Período:</span>{' '}
+              <strong className="text-slate-900">{labelPeriodo}</strong>
             </div>
-            <BotaoExportarPDF />
+            <div>
+              <span className="text-slate-500">Tipo:</span>{' '}
+              <strong className="text-slate-900">
+                {tipoPeriodo === 'PERSONALIZADO'
+                  ? 'Personalizado'
+                  : tipoPeriodo.charAt(0) +
+                    tipoPeriodo.slice(1).toLowerCase()}
+              </strong>
+            </div>
           </div>
 
-          {/* Relatório selecionado */}
-          {tipoRelatorio === 'CENTRAL_INSTITUCIONAL' && (
-            <CentralInstitucional periodo={periodo} />
-          )}
-
-          {tipoRelatorio === 'CENTRAL_PROVISAO' && (
-            <CentralProvisao periodo={periodo} />
+          {tipoRelatorio === 'CENTRAL' && (
+            <Central periodo={periodo} />
           )}
 
           {tipoRelatorio === 'FLUXO_DETALHADO' && (
-            <FluxoDetalhado
-              periodo={periodo}
-              unidadeId={params.unidadeId}
-            />
+            <FluxoDetalhado periodo={periodo} unidadeId={params.unidadeId} />
           )}
         </>
       ) : (
@@ -137,36 +130,13 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
   );
 }
 
-// =====================================================
-// Sub-componentes assíncronos
-// =====================================================
-
-async function CentralInstitucional({
+async function Central({
   periodo,
 }: {
   periodo: { inicio: string; fim: string };
 }) {
-  const linhas = await getCentralRegulacao(periodo, 'INSTITUCIONAL');
-  return (
-    <PreviewCentral
-      linhas={linhas}
-      titulo="Central de Regulação — Serviços de Acolhimento Institucional"
-    />
-  );
-}
-
-async function CentralProvisao({
-  periodo,
-}: {
-  periodo: { inicio: string; fim: string };
-}) {
-  const linhas = await getCentralRegulacao(periodo, 'PROVISAO');
-  return (
-    <PreviewCentral
-      linhas={linhas}
-      titulo="Central de Regulação — Serviço de Acolhimento Provisório (Casa de Passagem)"
-    />
-  );
+  const linhas = await getCentralRegulacao(periodo);
+  return <PreviewCentral linhas={linhas} />;
 }
 
 async function FluxoDetalhado({

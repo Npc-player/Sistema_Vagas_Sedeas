@@ -4,9 +4,6 @@
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 
-// =====================================================
-// Helpers
-// =====================================================
 function allRows<T>(result: unknown): T[] {
   if (Array.isArray(result)) return result as T[];
   if (result && typeof result === 'object' && 'rows' in result) {
@@ -17,51 +14,50 @@ function allRows<T>(result: unknown): T[] {
 }
 
 export interface Periodo {
-  inicio: string; // YYYY-MM-DD
-  fim: string;    // YYYY-MM-DD
+  inicio: string;
+  fim: string;
 }
 
 // =====================================================
-// Central de Regulação — dados por unidade
+// Central de Regulação (nova estrutura: 2 linhas por unidade)
 // =====================================================
 export interface LinhaCentralRegulacao {
   unidadeId: string;
   unidadeNome: string;
   unidadeTipo: string;
-  metaConveniada: number;
+  tipoVaga: 'PROVISORIO' | 'DEFINITIVO';
+  meta: number | null;
   entradas: number;
   saidas: number;
   evasoesOutros: number;
   acolhidos: number;
-  permanecentes: number;
-  vagasDisponiveis: number;
+  fixos: number;
+  vagasDisponiveis: number | null;
 }
 
 export async function getCentralRegulacao(
-  periodo: Periodo,
-  categoria: 'INSTITUCIONAL' | 'PROVISAO'
+  periodo: Periodo
 ): Promise<LinhaCentralRegulacao[]> {
-  const filtroTipo =
-    categoria === 'PROVISAO'
-      ? sql`u.tipo = 'CASA_PASSAGEM'::tipo_acolhimento`
-      : sql`u.tipo <> 'CASA_PASSAGEM'::tipo_acolhimento`;
-
   const result = await db.execute(sql`
     SELECT
       u.id AS "unidadeId",
       u.nome AS "unidadeNome",
       u.tipo::text AS "unidadeTipo",
-      u.capacidade_total AS "metaConveniada",
+      r.regime::text AS "tipoVaga",
+
+      CASE WHEN r.regime = 'PROVISORIO' THEN u.capacidade_total ELSE NULL END AS meta,
 
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
+          AND a.regime = r.regime
           AND a.data_acolhimento BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
       ), 0) AS entradas,
 
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
+          AND a.regime = r.regime
           AND a.data_desacolhimento BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
           AND a.situacao_especial IS NULL
       ), 0) AS saidas,
@@ -69,6 +65,7 @@ export async function getCentralRegulacao(
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
+          AND a.regime = r.regime
           AND a.situacao_especial IS NOT NULL
           AND a.situacao_especial_em BETWEEN ${periodo.inicio}::date AND ${periodo.fim}::date
       ), 0) AS "evasoesOutros",
@@ -76,6 +73,7 @@ export async function getCentralRegulacao(
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
+          AND a.regime = r.regime
           AND a.data_acolhimento <= ${periodo.fim}::date
           AND (a.data_desacolhimento IS NULL OR a.data_desacolhimento > ${periodo.fim}::date)
       ), 0) AS acolhidos,
@@ -83,47 +81,42 @@ export async function getCentralRegulacao(
       COALESCE((
         SELECT COUNT(*)::int FROM acolhimentos a
         WHERE a.unidade_id = u.id
+          AND a.regime = r.regime
           AND a.data_acolhimento < ${periodo.inicio}::date
-          AND (a.data_desacolhimento IS NULL OR a.data_desacolhimento >= ${periodo.inicio}::date)
           AND (a.data_desacolhimento IS NULL OR a.data_desacolhimento > ${periodo.fim}::date)
-      ), 0) AS permanecentes
+      ), 0) AS fixos,
+
+      CASE WHEN r.regime = 'PROVISORIO' THEN (
+        u.capacidade_total - COALESCE((
+          SELECT COUNT(*)::int FROM acolhimentos a
+          WHERE a.unidade_id = u.id
+            AND a.data_acolhimento <= ${periodo.fim}::date
+            AND (a.data_desacolhimento IS NULL OR a.data_desacolhimento > ${periodo.fim}::date)
+        ), 0)
+      ) ELSE NULL END AS "vagasDisponiveis"
 
     FROM unidades u
-    WHERE u.ativo = true AND ${filtroTipo}
-    ORDER BY u.nome ASC
+    CROSS JOIN (
+      VALUES
+        ('PROVISORIO'::regime_acolhimento),
+        ('DEFINITIVO'::regime_acolhimento)
+    ) AS r(regime)
+    WHERE u.ativo = true
+    ORDER BY
+      u.nome ASC,
+      CASE r.regime WHEN 'PROVISORIO' THEN 1 WHEN 'DEFINITIVO' THEN 2 END
   `);
 
-  const linhas = allRows<{
-    unidadeId: string;
-    unidadeNome: string;
-    unidadeTipo: string;
-    metaConveniada: number;
-    entradas: number;
-    saidas: number;
-    evasoesOutros: number;
-    acolhidos: number;
-    permanecentes: number;
-  }>(result);
-
-  return linhas.map((l) => ({
-    ...l,
-    vagasDisponiveis: Math.max(
-      0,
-      Number(l.metaConveniada) - Number(l.acolhidos)
-    ),
-  }));
+  return allRows<LinhaCentralRegulacao>(result);
 }
 
-// =====================================================
-// Totais consolidados
-// =====================================================
 export interface TotaisCentralRegulacao {
-  metaConveniada: number;
+  meta: number;
   entradas: number;
   saidas: number;
   evasoesOutros: number;
   acolhidos: number;
-  permanecentes: number;
+  fixos: number;
   vagasDisponiveis: number;
 }
 
@@ -132,21 +125,21 @@ export function calcularTotais(
 ): TotaisCentralRegulacao {
   return linhas.reduce(
     (acc, l) => ({
-      metaConveniada: acc.metaConveniada + l.metaConveniada,
+      meta: acc.meta + (l.meta ?? 0),
       entradas: acc.entradas + l.entradas,
       saidas: acc.saidas + l.saidas,
       evasoesOutros: acc.evasoesOutros + l.evasoesOutros,
       acolhidos: acc.acolhidos + l.acolhidos,
-      permanecentes: acc.permanecentes + l.permanecentes,
-      vagasDisponiveis: acc.vagasDisponiveis + l.vagasDisponiveis,
+      fixos: acc.fixos + l.fixos,
+      vagasDisponiveis: acc.vagasDisponiveis + (l.vagasDisponiveis ?? 0),
     }),
     {
-      metaConveniada: 0,
+      meta: 0,
       entradas: 0,
       saidas: 0,
       evasoesOutros: 0,
       acolhidos: 0,
-      permanecentes: 0,
+      fixos: 0,
       vagasDisponiveis: 0,
     }
   );
@@ -172,29 +165,19 @@ export function calcularPeriodo(
   if (tipo === 'ANUAL') {
     const inicio = new Date(base.getFullYear(), 0, 1);
     const fim = new Date(base.getFullYear(), 11, 31);
-    return {
-      inicio: formatarData(inicio),
-      fim: formatarData(fim),
-    };
+    return { inicio: formatarData(inicio), fim: formatarData(fim) };
   }
 
   if (tipo === 'TRIMESTRAL') {
     const trimestre = Math.floor(base.getMonth() / 3);
     const inicio = new Date(base.getFullYear(), trimestre * 3, 1);
     const fim = new Date(base.getFullYear(), trimestre * 3 + 3, 0);
-    return {
-      inicio: formatarData(inicio),
-      fim: formatarData(fim),
-    };
+    return { inicio: formatarData(inicio), fim: formatarData(fim) };
   }
 
-  // MENSAL
   const inicio = new Date(base.getFullYear(), base.getMonth(), 1);
   const fim = new Date(base.getFullYear(), base.getMonth() + 1, 0);
-  return {
-    inicio: formatarData(inicio),
-    fim: formatarData(fim),
-  };
+  return { inicio: formatarData(inicio), fim: formatarData(fim) };
 }
 
 function formatarData(d: Date): string {
@@ -205,12 +188,12 @@ function formatarData(d: Date): string {
 }
 
 // =====================================================
-// Fluxo Mensal Detalhado — lista nominal
+// Fluxo Detalhado
 // =====================================================
 export interface LinhaFluxoDetalhado {
   acolhimentoId: string;
   protocolo: string;
-  grupoIrmaos: string | null; // número da MP comum (irmãos)
+  grupoFamiliar: string | null;
 
   acolhidoId: string;
   nomeCompleto: string;
@@ -227,6 +210,7 @@ export interface LinhaFluxoDetalhado {
   cpf: string | null;
   rg: string | null;
 
+  numeroProcesso: string | null;
   numeroMedidaProtetiva: string | null;
   numeroGuiaAcolhimento: string | null;
   territorio: string | null;
@@ -238,7 +222,6 @@ export interface LinhaFluxoDetalhado {
   asVaraInfancia: string | null;
   psicVaraInfancia: string | null;
   asCreas: string | null;
-  psicCreas: string | null;
 
   situacaoEspecial: string | null;
   situacaoOutrosDetalhe: string | null;
@@ -260,7 +243,7 @@ export async function getFluxoDetalhado(
     SELECT
       ac.id AS "acolhimentoId",
       ac.protocolo,
-      ac.numero_medida_protetiva AS "grupoIrmaos",
+      a.grupo_familiar AS "grupoFamiliar",
 
       a.id AS "acolhidoId",
       a.nome_completo AS "nomeCompleto",
@@ -274,6 +257,7 @@ export async function getFluxoDetalhado(
       ac.motivo_acolhimento AS motivo,
       ac.regime::text AS regime,
 
+      ac.numero_processo AS "numeroProcesso",
       ac.numero_medida_protetiva AS "numeroMedidaProtetiva",
       ac.numero_guia_acolhimento AS "numeroGuiaAcolhimento",
       ac.territorio,
@@ -282,10 +266,9 @@ export async function getFluxoDetalhado(
       u.nome AS "unidadeNome",
       u.tipo::text AS "unidadeTipo",
 
-      ac.as_vara_infancia AS "asVaraInfancia",
-      ac.psic_vara_infancia AS "psicVaraInfancia",
-      ac.as_creas AS "asCreas",
-      ac.psic_creas AS "psicCreas",
+      COALESCE(ac.as_vara_infancia, u.as_vara_infancia) AS "asVaraInfancia",
+      COALESCE(ac.psic_vara_infancia, u.psic_vara_infancia) AS "psicVaraInfancia",
+      COALESCE(ac.as_creas, u.as_creas) AS "asCreas",
 
       ac.situacao_especial::text AS "situacaoEspecial",
       ac.situacao_outros_detalhe AS "situacaoOutrosDetalhe",
@@ -302,7 +285,7 @@ export async function getFluxoDetalhado(
     )
     ${filtroUnidade}
     ORDER BY
-      ac.numero_medida_protetiva NULLS LAST,
+      a.grupo_familiar NULLS LAST,
       a.nome_completo ASC
   `);
 
@@ -332,10 +315,7 @@ export async function getFluxoDetalhado(
           docResult
         )[0];
         if (doc) {
-          documentos.set(acolhidoId, {
-            cpf: doc.cpf,
-            rg: doc.rg,
-          });
+          documentos.set(acolhidoId, { cpf: doc.cpf, rg: doc.rg });
         }
       } catch (error) {
         console.error('[getFluxoDetalhado] erro ao descriptografar:', error);

@@ -40,7 +40,7 @@ function agrupar(linhas: LinhaFluxoDetalhado[]): Grupo[] {
   const mapa = new Map<string, LinhaFluxoDetalhado[]>();
 
   for (const l of linhas) {
-    const chave = l.grupoIrmaos ?? `__sem_grupo__${l.acolhimentoId}`;
+    const chave = l.grupoFamiliar ?? `__sem_grupo__${l.acolhimentoId}`;
     if (!mapa.has(chave)) mapa.set(chave, []);
     mapa.get(chave)!.push(l);
   }

@@ -1,6 +1,4 @@
 // src/app/api/relatorios/exportar/route.ts
-// Gera o PDF do relatório selecionado e devolve como stream.
-
 import { NextResponse, type NextRequest } from 'next/server';
 import { headers } from 'next/headers';
 import { sql } from 'drizzle-orm';
@@ -69,7 +67,7 @@ export async function POST(request: NextRequest) {
   const periodoLabel = `${formatarDataBR(periodo.inicio)} a ${formatarDataBR(periodo.fim)}`;
   const protocolo = gerarProtocoloExportacao();
 
-  // Busca nome + prontuário do usuário para exibir no PDF
+  // Busca nome + prontuário
   let nomeCompleto = session.userEmail;
   let prontuario: string | null = null;
   try {
@@ -97,15 +95,8 @@ export async function POST(request: NextRequest) {
       tipoRelatorio === 'CENTRAL_INSTITUCIONAL' ||
       tipoRelatorio === 'CENTRAL_PROVISAO'
     ) {
-      // Para o PDF consolidado, buscamos SEMPRE as duas categorias
-      const linhasInstitucional = await getCentralRegulacao(
-        periodo,
-        'INSTITUCIONAL'
-      );
-      const linhasProvisorio = await getCentralRegulacao(
-        periodo,
-        'PROVISAO'
-      );
+      // Nova estrutura: uma única tabela consolidando todas as unidades
+      const linhas = await getCentralRegulacao(periodo);
 
       dadosPDF = {
         tipo: 'CENTRAL',
@@ -114,8 +105,7 @@ export async function POST(request: NextRequest) {
         geradoPorNome: nomeCompleto,
         geradoPorProntuario: prontuario,
         geradoPorRole: session.role,
-        linhasInstitucional,
-        linhasProvisorio,
+        linhas,
       };
     } else if (tipoRelatorio === 'FLUXO_DETALHADO') {
       const linhas = await getFluxoDetalhado(periodo, body.unidadeId);
@@ -137,14 +127,9 @@ export async function POST(request: NextRequest) {
 
     const pdf = await gerarPDF(dadosPDF);
 
-    // Auditoria EXPORT
     const h = await headers();
     const forwarded = h.get('x-forwarded-for');
-    const totalRegistros =
-      dadosPDF.tipo === 'CENTRAL'
-        ? dadosPDF.linhasInstitucional.length +
-          dadosPDF.linhasProvisorio.length
-        : dadosPDF.linhas.length;
+    const totalRegistros = dadosPDF.linhas.length;
 
     try {
       await audit(
